@@ -1,0 +1,10 @@
+{% load basket_tags %}
+{% load display_tags %}
+{% load i18n %}
+{% load purchase_info_tags %}
+
+{% purchase_info_for_product request product as session %}
+
+{% basket_form request product as basket_form %}
+{% csrf_token %}
+{% include "partials/form_fields.html" with form=basket_form %}

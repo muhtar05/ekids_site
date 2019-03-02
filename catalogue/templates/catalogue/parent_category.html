@@ -1,0 +1,101 @@
+{% extends 'base.html' %}{% load category_tags %}{% load basket_tags %}{% load common_tags %}{% load thumbnail %}{% load purchase_info_tags %}{% load range_filter %}{% load humanize %}{% load staticfiles %}
+{% block js_gtm %}
+    <script type="text/javascript">
+        (dataLayer = window.dataLayer || []).push({
+            'userCity': '{{ city_data }}',
+            'contentType': 'Список категорий товаров', // Тип контента страницы
+            'breadCrumbs': '{% include "partials/breadcrumbs_text.html" with model=category %}' // Хлебные крошки
+        });
+    </script>
+{% endblock %}
+{% block counter_dynamic_appendix %}
+    <script type="text/javascript">
+    var _tmr = _tmr || [];
+    _tmr.push({
+        type: 'itemView',
+        productid: '',
+        pagetype: 'category',
+        list: '1',
+        totalvalue: ''
+    });
+    </script>
+{% endblock %}
+{% block seo_block %}    {% with seo_title=meta_tags|get_item:'seo_title' %}
+        <title>{% if seo_title %}{{ seo_title }}{% else %}{{ category.name|lower|capfirst }} – купить в интернет-магазине «ЧадоМаркет» в Москве{% endif %}</title>    {% endwith %}    {% with seo_description=meta_tags|get_item:'seo_description' %}
+        <meta name="description" content="{% if seo_description %}{{ seo_description }}{% else %}Купи {{ category.name|lower }} в интернет-магазине «ЧадоМаркет» и получи подарок! Бесплатная доставка по Москве{% endif %}">    {% endwith %}    {% with seo_keywords=meta_tags|get_item:'seo_keywords' %}
+        <meta name="keywords" content="{% if seo_keywords %}{{ seo_keywords }}{% else %}{{ category.name|lower }}, {{ category.name|lower }} купить, {{ category.name|lower }} москва, {{ category.name|lower }} цена, {{ category.name|lower }} интернет-магазин{% endif %}">    {% endwith %}
+{% endblock %}
+{% block content %}
+    <div class="category  container pagetype"  data-pagetype="Список категорий товаров">
+    {% include "partials/breadcrumbs.html" with model=category %}
+    {% with seo_h1=meta_tags|get_item:'seo_h1' %}
+        <h1 data-category="{{ category.name|lower|capfirst }}">
+        {% if seo_h1 %}{{ seo_h1 }}{% else %}{{ category.name|lower|capfirst }}{% endif %}</h1>
+    {% endwith %}
+        <div class="root_category">
+            {% for sub_category in category.children.all %}
+                {% if sub_category|get_children_exists_product:all_ids %}
+                    <div class="root_category-item">
+                        <h2 class="root_category-item-name">{{ sub_category.name }}</h2>
+                        <div class="root_category-item-img">
+                            {% if sub_category.image %}
+                                <img src="{% static 'img/placeholder.png' %}" data-src="/media/{{ sub_category.image }}" class="lazyload" alt="{{ sub_category.name }}" width="150" height="180">
+                            {% endif %}
+                        </div>
+                        <ul class="root_category-sublist">
+                            {% for child in sub_category|get_children_exists_product:all_ids %}
+                                {% if forloop.counter < 7 %}
+                                    <li>
+                                        <a href="{% url 'catalogue:category' child.slug  %}">{{ child.name }}</a>
+                                    </li>
+                                {% endif %}
+                                {% if forloop.last %}
+                                    <div class="root_category-item-all_link">
+                                        <a href="{% url 'catalogue:category' sub_category.slug %}">Показать все</a>
+                                    </div>
+                                {% endif %}
+
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% elif sub_category|does_have_products %}
+                    <div class="root_category-item">
+                        <h2 class="root_category-item-name">{{ sub_category.name }}</h2>
+                        <div class="root_category-item-img">
+                            {% if sub_category.image %}
+                                <img src="{% static 'img/placeholder.png' %}" data-src="/media/{{ sub_category.image }}" class="lazyload" alt="{{ sub_category.name }}" width="150" height="180">
+                            {% endif %}
+                        </div>
+                        <div class="root_category-item-all_link">
+                            <a href="{% url 'catalogue:category' sub_category.slug %}">Показать все</a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="brands_carousel">
+                <h2 class="brands_carousel-title">
+                    Бренды, представленные в данных категориях
+                </h2>
+                <div class="brands_carousel-slider_wr">
+                    <div class="swiper-container  js-brands-carousel">
+                        <div class="swiper-wrapper">
+                            {% for brand in brands_filter %}
+                                {% if brand.image %}
+                                <div class="swiper-slide">
+                                    <a href="{% url 'brand_page' slug=brand.slug %}"><img src="/media/{{ brand.image }}" alt=""></a>
+                                </div>
+                                {% else %}
+                                 <div class="swiper-slide no-photo-brand-slider">
+                                    <a href="{% url 'brand_page' slug=brand.slug %}">{{ brand.name }}</a>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <span class="products-carousel-prev  js-brands-carousel-prev"></span>
+                    <span class="products-carousel-next  js-brands-carousel-next"></span>
+                </div>
+        </div>
+    </div>
+{% endblock %}

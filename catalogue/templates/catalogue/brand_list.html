@@ -1,0 +1,55 @@
+{% extends 'base.html' %}{% load thumbnail %}{% load purchase_info_tags %}{% load basket_tags %}{% load humanize %}{% load range_filter %}{% load category_tags %}{% load common_tags %}
+{% block js_gtm %}
+    <script type="text/javascript">
+        (dataLayer = window.dataLayer || []).push({
+            'userCity': '{{ city_data }}',
+            'contentType': 'Страница брендов', // Тип контента страницы
+            'breadCrumbs': 'Главная / Бренды ' // Хлебные крошки
+        });
+    </script>
+{% endblock %}
+{% block counter_dynamic_appendix %}
+    <script type="text/javascript">
+    var _tmr = _tmr || [];
+    _tmr.push({
+        type: 'itemView',
+        productid: '',
+        pagetype: 'other',
+        list: '1',
+        totalvalue: ''
+    });
+    </script>
+{% endblock %}
+{% block seo_block %}  {% with meta_tags='other_pages'|get_seo_tags:'Бренды' %}            {% with seo_title=meta_tags|get_item:'seo_title' %}
+                <title>{% if seo_title %}{{ seo_title }}{% else %}Корзина | интернет-магазина ЧадоМаркет.ру{% endif %}</title>            {% endwith %}            {% with seo_description=meta_tags|get_item:'seo_description' %}
+                <meta name="description" content="{% if seo_description %}Корзина | на официальном сайте интернет-магазина ЧадоМаркет.ру{% endif %}">           {% endwith %}            {% with seo_keywords=meta_tags|get_item:'seo_keywords' %}
+                <meta name="keywords" content="{% if seo_keywords %}Бренды{% endif %}">            {% endwith %}  {% endwith %}
+{% endblock %}
+{% block content %}
+    <div class="container pagetype"  data-pagetype="Список брендов">
+        <div class="breadcrumbs">
+            <a href="/">Главная</a> / <span class="breadcrumbs-current">Бренды</span>
+        </div>
+        <h1>Бренды</h1>
+        <div class="brands_alphabet">
+            <ul class="brands_alphabet-index">
+                {% for letter in letters %}
+                    <li><a href="#{{ letter }}">{{ letter }}</a></li>
+                {% endfor %}
+            </ul>
+        {% for letter in letters %}
+            {% if forloop.first %} <div class="brands_alphabet-row">{% endif %}
+                <div class="brands_alphabet-col" id="{{ letter }}">
+                    <div class="brands_alphabet-letter">{{ letter }}</div>
+                    <ul>
+                        {% for brand in brands|get_brands:letter %}
+                            <li><a href="{{ brand.slug }}/">{{ brand.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% if not forloop.last and forloop.counter|check_forloop_last %} </div><div class="brands_alphabet-row">{% endif %}
+            {% if forloop.last %}</div>{% endif %}
+        {% endfor %}
+        </div>
+    </div>
+{% endblock %}

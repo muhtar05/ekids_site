@@ -1,0 +1,107 @@
+<!-- filter-section price-->
+<div class="filter-section  active" data-parent-id="2" data-this-id="2">
+    <fieldset>
+        <div class="filter-section-top">
+            <span class="filter-section-title">Цена</span>
+            <button class="filter-section-toggle_btn  js-filter-section-toggle"
+                    type="button"></button>
+        </div>
+        <!-- price filter -->
+        <div class="filter-section-content">
+            <div class="filter-slider-inputs clearfix">
+                <div class="filter-slider-inputs-item">
+                    <span class="filter-slider-inputs-item-label">от</span>
+                    <input class="filter-slider-input  filter-slider-min" type="text"
+                           name="price-slider-min"
+                           value="0">
+                    <span class="filter-slider-inputs-item-reset  js-filter-slider-reset-min"
+                          title="Сбросить"><i class="ico ico-times"></i></span>
+                </div>
+                <div class="filter-slider-inputs-item">
+                    <span class="filter-slider-inputs-item-label">до</span>
+                    <input class="filter-slider-input  filter-slider-max" type="text"
+                           name="price-slider-max"
+                           value="{{ max_price|floatformat:0 }}">
+                    <span class="filter-slider-inputs-item-reset  js-filter-slider-reset-max"
+                          title="Сбросить"><i class="ico ico-times"></i></span>
+                </div>
+            </div>
+            <div class="js-filter-slider" data-minval="0"
+                 data-maxval="{{ max_price|floatformat:0 }}"></div>
+        </div>
+        <!--end price filter -->
+    </fieldset>
+</div>
+<!-- end-filter-section price-->
+{% for attr in category.get_show_attributes %}
+    {% if attr.is_option %}
+        {% with yes_options=filter_result|get_item_int:attr.id %}
+            {% if yes_options %}
+                <div class="filter-section {{ attr.code }} filter-section-{{ attr.id }} filter-section-{{ attr.code }} active">
+                    <div class="filter-section-top">
+                        <span class="filter-section-title">{{ attr }}</span>
+                    </div>
+                    <div class="filter-section-content">
+                        <ul>
+
+                            {% for opt in attr.option_group.options.all %}
+
+                                {% if opt.id in yes_options %}
+                                    <li>
+                                        <label class="filter-item">
+                                            <input class="pseudo-control category-item"
+                                                   type="checkbox"
+                                                   data-this-id="{{ opt.id }}" name=""
+                                                   value="{{ opt.id }}">
+                                            <i class="pseudo-control-checkbox"></i>
+                                            <span class="filter-item-name">{% if attr.code == 'age_from' or attr.code == 'age_to' %}
+                                                {{ opt.option|month_to_year }}{% else %}
+                                                {{ opt }}{% endif %}</span>
+                                        </label>
+                                    </li>
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+    {% else %}
+        {% with yes_options=filter_float_result|get_item_int:attr.id %}
+            {% if yes_options %}
+                <div class="filter-section {{ attr.code }} filter-section-{{ attr.code }} active">
+                    <div class="filter-section-top">
+                        <span class="filter-section-title">{{ attr }}</span>
+                    </div>
+
+                    <div class="filter-section-content">
+                        <div class="filter-slider-inputs clearfix">
+                            <div class="filter-slider-inputs-item">
+                                <span class="filter-slider-inputs-item-label">от</span>
+                                <input class="filter-slider-input  filter-slider-min" type="text"
+                                       name="{{ attr.code }}-slider-min"
+                                       value="{{ yes_options.0|floatformat:0 }}">
+                                <span class="filter-slider-inputs-item-reset  js-filter-slider-reset-min"
+                                      title="Сбросить"><i class="ico ico-times"></i></span>
+                            </div>
+                            <div class="filter-slider-inputs-item">
+                                <span class="filter-slider-inputs-item-label">до</span>
+                                <input class="filter-slider-input  filter-slider-max" type="text"
+                                       name="price-slider-max"
+                                       value="{{ yes_options.1|floatformat:0 }}">
+                                <span class="filter-slider-inputs-item-reset  js-filter-slider-reset-max"
+                                      title="Сбросить"><i class="ico ico-times"></i></span>
+                            </div>
+                        </div>
+                        <div class="js-filter-slider"
+                             data-minval="{{ yes_options.0|floatformat:0 }}"
+                             data-maxval="{{ yes_options.1|floatformat:0 }}"></div>
+                    </div>
+
+                </div>
+            {% endif %}
+        {% endwith %}
+    {% endif %}
+{% endfor %}

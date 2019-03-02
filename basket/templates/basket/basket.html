@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+{% load thumbnail %}
+{% load common_tags %}
+{% load range_filter %}
+{% load staticfiles %}
+{% load i18n %}
+{% load purchase_info_tags %}
+{% load widget_tweaks %}
+{% load humanize %}
+{% block js_gtm %}
+    <script type="text/javascript">
+        (dataLayer = window.dataLayer || []).push({
+            'userCity': '{{ city_data }}',
+            'contentType': 'Страница оформления заказа', // Тип контента страницы
+            'breadCrumbs': 'Главная / Корзина ' // Хлебные крошки
+        });
+    </script>
+{% endblock %}
+{% block counter_dynamic_appendix %}
+    <script type="text/javascript">
+        var _tmr = _tmr || [];
+        _tmr.push({
+            type: 'itemView',
+            productid: {{ basket_product_ids|safe }},
+            pagetype: 'cart',
+            list: '1',
+            totalvalue: '{{ discount_order_total|floatformat:0 }}'
+        });
+    </script>
+{% endblock %}
+{% block seo_block %}
+    {% with meta_tags='other_pages'|get_seo_tags:'Корзина' %}
+    {% with seo_title=meta_tags|get_item:'seo_title' %}
+        <title>{% if seo_title %}{{ seo_title }}{% else %}Корзина | интернет-магазина ЧадоМаркет.ру{% endif %}</title>
+    {% endwith %}
+    {% with seo_description=meta_tags|get_item:'seo_description' %}
+        <meta name="description" content="{% if seo_description %}{{ seo_description }}{% else %}Корзина | на официальном сайте интернет-магазина ЧадоМаркет.ру{% endif %}">
+    {% endwith %}
+    {% with seo_keywords=meta_tags|get_item:'seo_keywords' %}
+        <meta name="keywords" content="{% if seo_keywords %}{{ seo_keywords }}{% else %}Корзина{% endif %}">
+    {% endwith %}
+    {% endwith %}
+{% endblock %}
+{% block css_block %}
+    <link rel="stylesheet" href="{% static 'css/cart.css' %}"> {% endblock %}
+{% block content %}
+    <div class="container pagetype" data-pagetype="Страница оформления заказа">
+        {% comment %}
+        <div class="breadcrumbs">
+            <a href="/">Главная</a> / <a class="breadcrumbs-current" href="">Корзина</a>
+        </div>
+        {% endcomment %}
+        <div class="cart">
+            <div class="cart-container  clearfix">
+                <!-- cart section cart header-->
+                <div class="cart-sections">
+                    <div class="cart-steps  hidden-xs">
+                        <div class="cart-steps-item  cart-steps-item-contents  active">
+                            <div class="cart-steps-item-in">
+                                <span class="cart-steps-item-num">1</span>
+                                Моя корзина
+                            </div>
+                        </div>
+                        <div class="cart-steps-item  cart-steps-item-delivery">
+                            <div class="cart-steps-item-in">
+                                <span class="cart-steps-item-num">2</span>
+                                Детали доставки
+                            </div>
+                        </div>
+                        <div class="cart-steps-item  cart-steps-item-payment">
+                            <div class="cart-steps-item-in">
+                                <span class="cart-steps-item-num">3</span>
+                                Оплата
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cart-section  cart-section-cart active" data-step-name="goods">
+                        <div class="cart-section-content">
+                            {% if formset.0.instance %}
+                                <table class="cart-contents">
+                                    <thead class="hidden-xs">
+                                    <tr>
+                                        <td>
+                                            Описание
+                                        </td>
+
+                                        <td class="text-center">
+                                            Цена
+                                        </td>
+                                        <td class="text-center">
+                                            Количество
+                                        </td>
+                                        <td class="text-center">
+                                            Сумма
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for form in formset %}
+                                        {% with line=form.instance product=form.instance.product %}
+                                            {% if not line.pk in old_lines_ids %}
+                                            {% purchase_info_for_line request line as session %}
+                                            <tr class="cart-contents-item"
+                                                data-id="{{ product.id }}" data-name="{{ product.title }}" data-price="
+                                                    {% if product_discount %}{{ product.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0 }}{% else %}{{ product.price_mrc|floatformat:0 }}{% endif %}"
+                                                data-brand-name="{{ product.brand_name }}"
+                                                data-category-name="{{ product.category_name }}"
+                                                data-variant-name="{{ product.variant_name }}">
+                                                <td class="cart-contents-item">
+                                                    <div class="cart-contents-img">
+                                                        {% thumbnail product.primary_image.original "120x95" upscale=False as thumb %}
+                                                            <img src="{{ thumb.url }}" alt="">
+                                                        {% endthumbnail %}
+                                                    </div>
+                                                    <div class="cart-contents-info">
+                                                        <div class="cart-contents-name color-blue js-change-product-in-cart" data-in-cart-id="{{ line.pk }}" data-product-id="{{ product.id }}">
+                                                            {{ product.title |truncatechars:65 }}
+                                                        </div>
+                                                        <table class="hidden-xs">
+                                                            <tbody>
+                                                            <tr>
+                                                                <td>Код товара:</td>
+                                                                <td>{% if product.artikul %}
+                                                                    {{ product.artikul|take_last_part_artikul|capfirst }}{% endif %}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Страна:</td>
+                                                                {% with country=product|get_attribute:'country' %}
+                                                                    <td>{% if country %}
+                                                                        {{ country|capfirst }}{% endif %}</td>
+                                                                {% endwith %}
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Цвет:</td>
+                                                                {% with color=product|get_attribute:'color1' %}
+                                                                    <td>{% if color %}
+                                                                        {{ color|capfirst }}{% endif %}</td>
+                                                                {% endwith %}
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+                                                        <button data-id="{{ line.pk }}"
+                                                                class="cart-contents-item-remove  js-cart-item-remove  visible-xs"
+                                                                title="Удалить из корзины" type="button"></button>
+                                                    </div>
+                                                </td>
+                                                <td class="no-wrap  cart-contents-item-price">
+                                                    {% if product.get_discount %}
+                                                        <span class="cart-contents-item-price-old">{{ product.price_mrc|floatformat:0|intcomma }}</span>
+                                                    {% endif %}
+                                                    <span class="js-cart-item-price">
+                                                        {{ line.unit_price_with_discount|floatformat:0|intcomma }}
+                                                    </span>
+                                                </td>
+                                                <td class="cart-contents-item-qty">
+
+                                                    <div class="qty js-qty"
+                                                         data-qty="{{ product.num_in_stock }}"
+                                                         data-actual-qty="{% actual_stock product quantity=line.quantity basket=basket %}">
+                                                        <button class="qty-rem js-qty-btn" data-action="rem"
+                                                                type="button"{% if line.quantity == 1 %}
+                                                                disabled="disabled"{% endif %}>
+                                                            −
+                                                        </button>
+                                                        <input class="qty-val js-qty-val" id="id-quantity-{{ line.pk }}"
+                                                               data-price-product="{{ line.unit_price_with_discount|floatformat:0 }}"
+                                                               data-id="{{ line.pk }}" min="0"
+                                                               name="form-1-quantity-{{ line.pk }}"
+                                                               type="text" value="{{ line.quantity }}">
+                                                        <button class="qty-add js-qty-btn" data-action="add"
+                                                                type="button"
+                                                                {% if product.num_in_stock|minus:product.num_allocated == 0 %}
+                                                                disabled="disabled"{% endif %}>
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td class="no-wrap cart-contents-item-total-price">
+													<span class="js-cart-item-total-price {% if not product.get_discount %}without-discount{% endif %}"
+                                                          data-product-without-discount-price="{{ line.line_price_with_discount|floatformat:0 }}">
+                                                           {{ line.line_price_with_discount|floatformat:0|intcomma }}
+                                                    </span>
+                                                    <span class="visible-xs-inline rouble">Р</span>
+                                                    <input type="hidden" name="product_id" value="1">
+                                                </td>
+                                                <td class="cart-contents-item-remove-wr hidden-xs">
+                                                    <button data-id="{{ line.pk }}"
+                                                            class="cart-contents-item-remove  js-cart-item-remove"
+                                                            title="Удалить из корзины" type="button"></button>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endfor %}
+
+                                    {% for line in basket.old_lines.all %}
+                                        {% if line.is_show %}
+                                        {% with product=line.product %}
+                                        <tr class="cart-contents-item cart-contents-item-out"
+                                                data-id="{{ product.id }}" data-name="{{ product.title }}" data-price="
+                                                    {% if product_discount %}{{ product.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0 }}{% else %}{{ product.price_mrc|floatformat:0 }}{% endif %}"
+                                                data-brand-name="{{ product.brand_name }}"
+                                                data-category-name="{{ product.category_name }}"
+                                                data-variant-name="{{ product.variant_name }}">
+                                                <td class="cart-contents-item">
+                                                    <div class="cart-contents-img">
+                                                        {% thumbnail product.primary_image.original "120x95" upscale=False as thumb %}
+                                                            <img src="{{ thumb.url }}" alt="">
+                                                        {% endthumbnail %}
+                                                    </div>
+                                                    <div class="cart-contents-info">
+                                                        <div class="cart-contents-name color-blue">
+                                                            {{ product.title |truncatechars:65 }}
+                                                        </div>
+                                                        <table class="hidden-xs">
+                                                            <tbody>
+                                                            <tr>
+                                                                <td>Код товара:</td>
+                                                                <td>{% if product.artikul %}
+                                                                    {{ product.artikul|take_last_part_artikul|capfirst }}{% endif %}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Страна:</td>
+                                                                {% with country=product|get_attribute:'country' %}
+                                                                    <td>{% if country %}
+                                                                        {{ country|capfirst }}{% endif %}</td>
+                                                                {% endwith %}
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Цвет:</td>
+                                                                {% with color=product|get_attribute:'color1' %}
+                                                                    <td>{% if color %}
+                                                                        {{ color|capfirst }}{% endif %}</td>
+                                                                {% endwith %}
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+                                                        <button data-id="{{ line.pk }}"
+                                                                class="cart-contents-item-remove  js-cart-item-remove  visible-xs"
+                                                                title="Удалить из корзины" type="button"></button>
+                                                    </div>
+                                                </td>
+                                                <td class="no-wrap  cart-contents-item-price">
+                                                    {% if product.get_discount %}
+                                                        <span class="cart-contents-item-price-old">{{ product.price_mrc|floatformat:0|intcomma }}</span>
+                                                    {% endif %}
+                                                    <span class="js-cart-item-price">
+                                                        {{ line.unit_price_with_discount|floatformat:0|intcomma }}
+                                                    </span>
+                                                </td>
+                                                <td class="cart-contents-item-qty">
+                                                    <span class="cart-contents-item-out-label">распродано</span>
+
+                                                </td>
+                                                <td class="no-wrap cart-contents-item-total-price">
+													<span class="js-cart-item-total-price {% if not product.get_discount %}without-discount{% endif %}"
+                                                          data-product-without-discount-price="{{ line.line_price_with_discount|floatformat:0 }}">
+                                                           {{ line.line_price_with_discount|floatformat:0|intcomma }}
+                                                    </span>
+                                                    <span class="visible-xs-inline rouble">Р</span>
+                                                    <input type="hidden" name="product_id" value="1">
+                                                </td>
+                                                <td class="cart-contents-item-remove-wr hidden-xs">
+                                                    <button data-id="{{ line.pk }}"
+                                                            class="cart-contents-item-remove  js-cart-item-remove"
+                                                            title="Удалить из корзины" type="button"></button>
+                                                </td>
+                                            </tr>
+                                        {% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    </tbody>
+                                </table>
+                                {% if timer %}
+                                    <div class="basket-timer"
+                                         data-timer="{{ timer }}"></div>
+                                {% endif %}
+                            {% else %}
+                                <div class="empty-card">Ваша корзина пуста </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- endheader -->
+{#                    {% include "basket/shipping.html" %}#}
+{#                    {% include "basket/payment.html" with order_total=order_total %}#}
+                </div>
+                <div class="cart-order_block">
+                    {% if timer %}
+                    <div class="cart-order_block-timer  hidden">До окончания резерва: <b
+                            class="cart-order_block-timer-val color-pink"></b></div>
+                    {% endif %}
+                    <div class="cart-order_block-title hidden-sm hidden-xs">Ваш заказ</div>
+                    <div class="row">
+                        <div class="col-md-12  col-md-offset-0  col-sm-4  col-sm-offset-2 col-xs-6">
+                            <table class="cart-order_block-table">
+                                <tbody>
+                                <tr>
+                                    <td>В корзине</td>
+                                    <td class="cart-order_block-table-val
+                                          js-order-total-count">
+                                        {{ basket.num_items }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Сумма</td>
+                                    <td class="cart-order_block-table-val
+                                        js-order-total-price"
+                                        data-order-total-price="{{ discount_order_total|floatformat:0 }}"
+                                        data-order-total-price-without-discount="{{ order_total.incl_tax|floatformat:0 }}">
+                                        {{ order_total.incl_tax|floatformat:0|intcomma }}
+                                    </td>
+                                </tr>
+                                <tr class="discount-sale {% if discount_total == 0 %}hidden{% endif %}">
+                                    <td>Скидка по акции</td>
+                                    <td class="cart-order_block-table-val
+                                        js-order-discount-price"
+                                        data-order-discount-price="{{ discount_total }}">
+                                        {% if discount_total %}-  {% endif %}{{ discount_total }}
+                                    </td>
+                                </tr>
+                                <tr class="discount-code hidden">
+                                    <td>Скидка по промокоду</td>
+                                    <td class="cart-order_block-table-val
+                                        js-order-promo-discount-price">
+                                        0
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="delivery_td">Доставка</td>
+                                    <td class="cart-order_block-table-val  js-order-total-delivery"
+                                        data-order-total-delivery="0">0
+                                    </td>
+                                </tr>
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <td>Итого:</td>
+                                    <td class="cart-order_block-table-val cart-order_block-table-val--total js-order-total"
+                                        data-order-total="{{ discount_order_total|floatformat:0 }}"
+                                        id="js-order-total">
+                                        {{ discount_order_total|floatformat:0|intcomma }}
+                                    </td>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="col-md-12  col-sm-4  col-xs-6">
+                            {% if formset.0.instance %}
+                                <div class="cart-order_block-controls">
+                                    <div class="cart-order_block-controls-in">
+
+                                        <div class="cart-order_block-promocode">
+                                            <div class="cart-order_block-promocode-link-wr">
+                                                <span class="cart-order_block-promocode-link">Активировать промокод</span>
+                                            </div>
+                                            <div class="cart-order_block-promocode-field hidden">
+                                                <label for="b-promocode">Введите промокод:</label>
+                                                <input type="text"
+                                                       class="input-promocode"
+                                                       name="promocode"
+                                                       value=""
+                                                       maxlength="6"
+                                                       id="b-promocode">
+                                                <div class="cart-order_block-promocode-error"></div>
+                                            </div>
+                                            <div class="cart-order_block-promocode-accepted hidden">
+                                                <span class="cart-order_block-promocode-accepted-code"></span>
+                                                <span class="cart-order_block-promocode-accepted-remove"
+                                                      title="Удалить промокод"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="cart-order_block-btns">
+                                            <button class="cart-order_block-btn  btn  btn-green  btn-md  btn-block  js-order-next"
+                                                    type="button">Продолжить
+                                            </button>
+                                            <button class="cart-order_block-btn  btn  btn-green  btn-md  btn-block hidden js-order-complete"
+                                                    type="submit">Завершить оформление
+                                            </button>
+                                            <button class="cart-order_block-btn  cart-order_block-btn--calculation  btn  btn-wp  btn-md  btn-block hidden"
+                                                    type="button" disabled="">
+                                                <div class="calculation-loading">
+                                                    Расчёт доставки ...
+                                                </div>
+                                            </button>
+                                        </div>
+
+                                        <div class="cart-order_block-back-wr">
+                                            <button class="js-order-prev  cart-order_block-back hidden  btn btn-blue btn-sm"
+                                                    type="button">Назад
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hidden">
+        <div class="modal" id="fuck">
+            <div class="modal-title color-pink">Уважаемые посетители!</div>
+            <p>В данный момент на сайте ведутся техничекие работы, поэтому форма заказа не работает.</p>
+        </div>
+    </div>
+    <div class="modal  modal-product border-top  hidden" id="productmodal">
+        <div class="modal-product-in">
+            <div class="modal-product-name"></div>
+            <div class="clearfix">
+                <div class="product-imgs">
+                    <div class="no-gutter">
+                        <div class="col-md-10  col-md-push-2  col-sm-12 text-center">
+                            <div class="product-imgs-main-wr  easyzoom">
+                                <a rel="modal" class="product-imgs-main js-fancy" href=""> <img src="" alt="" data-zoom-image=""></a>
+                            </div>
+                        </div>
+                        <div class="col-md-2  col-md-pull-10  col-sm-12">
+                            <div class="product-imgs-gall ">
+                                <span class="products-item-gall-prev  js-product-item-gall-prev swiper-button-disabled"></span>
+                                <div class="swiper-container js-modal-product-item-gall">
+                                    <div class="swiper-wrapper"></div>
+                                </div>
+                                <span class="products-item-gall-next  js-product-item-gall-next"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-product-right">
+                    <div class="modal-product-cart">
+                        <div class="modal-product-offer">
+                            <div class="modal-product-price">
+                                <span class="product-price-current-val"></span> <span class="product-price-currency rouble">Р</span>
+                            </div>
+                            <div class="modal-product-price-old product-price-old">
+                                <span class="product-price-old-val"></span> <span class="product-price-currency rouble">Р</span>
+                            </div>
+                            <span class="modal-product-stock"></span>
+                        </div>
+
+                        <div class="product-buy_btn   clearfix">
+                            <form action="" method="post" id="basket_form">
+                                {% csrf_token %}
+                                <input id="id_quantity" name="quantity" type="hidden" value="1">
+                                <button class="product-add2cart product-add2cart--w100 js-change-product" type="submit" data-stock=""><i class="ico ico-cart-white"></i> Заменить</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="product-variants">
+                        <div class="product-variants-title">Варианты расцветки</div>
+                        <div class="product-variants-list  product-variants--colors  js-modal-product-variants"></div>
+                    </div>
+                    <div class="product-variants hidden">
+                        <div class="product-variants-title">Размеры</div>
+                        <ul class="product-variants-list  product-variants--sizes  product-variants--sizes--6  product-sizes-list  clearfix js-modal-product-variants-sizes">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-product-bot">
+                <a class="modal-product-more btn  btn-blue  btn-sm" href="">Больше информации о товаре</a>
+            </div>
+        </div>
+        <span class="modal-product-close fancybox-close" onclick="closeFastView();"></span>
+    </div>
+{% endblock content %}
+{% block js_block %}
+    <script src="{% static 'js/basket.js' %}"></script>
+{% endblock %}

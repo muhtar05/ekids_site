@@ -1,0 +1,220 @@
+{% load range_filter %}{% load common_tags %}
+<div class="cart-section  cart-section-delivery" data-free-date="{{ day_for_free_delivery }}" data-step-name="delivery">
+    <div class="cart-section-content">
+        <div class="cart-reg">
+            <div class="cart-reg-title">Контактные данные</div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-row">
+                        <input type="text" id="form_phone" placeholder="Ваш телефон *" name="phone" value="{% if user.email %}{{ user.phones.all.0.phone }}{% endif %}">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-row">
+                        {% csrf_token %}
+                        <input type="text" id="form_email" placeholder="Ваш E-mail" name="email" value="{% if user.email %}{{ user.email }}{% endif %}" {% if user.is_authenticated %}disabled{% endif %}>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-row">
+                        <input type="text" id="form_last_name" placeholder="Ваше имя" name="last_name" value="{% if user.email %}{{ user.last_name }}{% endif %}" >
+                    </div>
+                </div>
+                {% if not user.is_authenticated %}
+                    <input type="hidden" id="register" name="register" value="register">
+                {% else %}
+                    <input type="hidden" id="register" name="register" value="edit">
+                {% endif %}
+            </div>
+        </div>
+        <div class="cart-section-delivery-city">Доставка по <span
+                class="cart-section-delivery-choose-city  color-blue  js-city"
+                data-fancybox-href="#city_list">{{ city_data }}</span></div>
+        <div class="vertical_tabs  js-vtabs">
+            <div class="vertical_tabs-index  hidden-xs">
+             {% if city %}
+                <div class="vertical_tabs-index-item active" data-id="2">
+                    <label>
+                        <input class="pseudo-control" type="radio" name="delivery" value="2" checked="checked">
+                        <i class="pseudo-control-radio"></i>
+                        <div class="vertical_tabs-index-item-name">Курьерская доставка г. {{ city_data }}
+                        </div>
+                        <table>
+                            <tbody>
+                            <tr>
+                                <td>Дата доставки:</td>
+                                <td><span class="color-blue" id="min-courier-time">Загрузка</span></td>
+                            </tr>
+                            <tr>
+                                <td>Стоимость:</td>
+                                <td id="min-courier-price"><span class="color-blue">Загрузка</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </label>
+                </div>
+             {% endif %}
+            {% if offices_bool == 1 %}
+                <div class="vertical_tabs-index-item {% if offices_check == 0 %}hidden{% endif %}" data-id="1">
+                    <label>
+                        <input class="pseudo-control" type="radio" name="delivery" value="1">
+                        <i class="pseudo-control-radio"></i>
+                        <div class="vertical_tabs-index-item-name">Пункты выдачи заказов гипермаркета «ЧадоМаркет.ру»
+                        </div>
+                        <table>
+                            <tbody>
+                            <tr>
+                                <td>Дата доставки:</td>
+                                <td><span class="color-blue" id="min-pvz-time">Загрузка</span></td>
+                            </tr>
+                            <tr>
+                                <td>Стоимость:</td>
+                                <td id="min-pvz-price"><span class="color-blue">Загрузка</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </label>
+                </div>
+             {% endif %}
+            </div>
+            <div class="vertical_tabs-content">
+                {% if city %}
+                    <div class="vertical_tabs-content-item  vertical_tabs-item-2 active">
+                        <div class="order-delivery-my_addr">
+                            <span class="color-blue">Мои адреса</span>
+                        </div>
+                        <div class="order-delivery-choose_address   js-order-choose-addr">
+                            {% for adr in users_address %}
+                                <label class="order-delivery-choose_addres-item">
+                                    <input class="pseudo-control"
+                                           type="radio"
+                                           name="delivery_address-courier"
+                                           value="{{ adr.pk }}"
+                                           data-cityid="{{ adr.city_id }}"
+                                           data-city="{{ adr.line4 }}"
+                                           data-delivery-price=""
+                                           data-delivery-time=""
+                                           {% if users_address %}checked="checked"{% endif %}>
+                                    <i class="pseudo-control-radio"></i>
+                                    {{ adr }}
+                                </label>
+                            {% endfor %}
+                            <label class="order-delivery-choose_addres-item">
+                                <input class="pseudo-control js-order-new-addr" type="radio"
+                                       name="delivery_address-courier" data-city="{{ city_data }}"
+                                       data-cityid="{{ city_data.city_id}}"
+                                       {% if not users_address %}checked="checked"{% endif %}>
+                                <i class="pseudo-control-radio"></i>
+                                Новый адрес
+                            </label>
+                            <div class="js-order-new-addr-form {% if users_address %} hidden{% endif %}">
+                                <form action="" id="new-address-courier">
+                                    <div class="row  form-row">
+                                        <div class="col-md-12 form-row">
+                                            <input type="text" id="StreetInput" placeholder="Улица"
+                                                   {% if users_address %}disabled="disabled"{% endif %}
+                                                   name="line1">
+                                        </div>
+                                        <div class="col-md-4 form-row">
+                                            <input id="HouseInput" type="text" placeholder="Дом"
+                                                   {% if users_address %}disabled="disabled"{% endif %}
+                                                   name="line2">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="text" placeholder="Корпус"
+                                                   {% if users_address %}disabled="disabled"{% endif %} name="building">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="text" placeholder="Подъезд"
+                                                   {% if users_address %}disabled="disabled"{% endif %} name="porch">
+                                        </div>
+                                        {% comment %}
+                                        <div class="col-md-4">
+                                            <input type="text" placeholder="Этаж"
+                                                   {% if users_address %}disabled="disabled"{% endif %} name="floor">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input id="FlatInput" type="text" placeholder="Квартира"
+                                                   {% if users_address %}disabled="disabled"{% endif %}
+                                                   name="line3">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="text" placeholder="Домофон"
+                                                   {% if users_address %}disabled="disabled"{% endif %}name="domofon">
+                                            <input type="hidden" name="line4" value="{{ city_data }}">
+                                            <input type="hidden" value="courier-form"
+                                                   {% if users_address %}disabled="disabled"{% endif %}
+                                                   name="form-name">
+                                        </div>
+                                        {% endcomment %}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="order-delivery-dates">
+                            <div class="order-delivery-dates-select"
+                                 data-start-date=""
+                                 data-delivery-intervals='[{% for choise in time_choises %}{"value": "{{ choise.0 }}", "text": "{{ choise.1 }}"}{% if forloop.last == False %},{% endif %}{% endfor %}]'>
+                                 <div class="order-delivery-stitle color-blue"><span class="plink js-show-delivery-intervals">Выберите удобную для вас дату доставки</span></div>
+                            </div>
+                            <input type="hidden" name="delivery_date" id="delivery_date" value="{{ day_for_free_delivery }}">
+                            <input type="hidden" name="delivery_time" id="delivery_time" value="{{ day_for_free_delivery }}">
+                        </div>
+                    </div>
+                    <div class="vertical_tabs-content-item  vertical_tabs-item-1 {% if offices_check == 0 %}hidden{% endif %}">
+                        <div class="order-delivery">
+                            <div class="order-delivery-select"></div>
+                            <div class="row">
+                                <div class="col-sm-6  col-xs-12">
+                                    <div class="order-delivery-scroll  js-oreder-delivery-pvz">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6  col-xs-12  ">
+                                    <div class="order-delivery-selected">
+                                        <p class="order-delivery-selected-item">
+                                            <span class="order-delivery-selected-item-name">Ближайшее метро:</span>
+                                            <span class="order-delivery-selected-item-subway"></span>
+                                        </p>
+                                        <p class="order-delivery-selected-item">
+                                            <span class="order-delivery-selected-item-name">Адрес:</span>
+                                            <span class="order-delivery-selected-item-addr"></span>
+                                        </p>
+                                        
+                                        {% comment %}
+                                        <p class="order-delivery-selected-item">
+                                            <span class="order-delivery-selected-item-name">Телефон:</span>
+                                            <span class="order-delivery-selected-item-phone"></span>
+                                        </p>
+                                        <p class="order-delivery-selected-item">
+                                            <span class="order-delivery-selected-item-name">Время работы:</span>
+                                            <span class="order-delivery-selected-item-workh"></span>
+                                        </p>
+                                        <p class="order-delivery-selected-item">
+                                            <span class="order-delivery-selected-item-name">Как добраться:</span>
+                                            <span class="order-delivery-selected-item-descr"></span>
+                                        </p>
+                                        {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="vertical_tabs-content-item  vertical_tabs-item-1  active">
+                        <p>К сожалению мы не сможем доставить заказ в Ваш город</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="hidden">
+    <div class="modal" id="problem">
+        <div class="modal-title color-pink">Ошибка!</div>
+        <p class="modal-text"></p>
+    </div>
+    <div class="modal" id="warning">
+        <div class="modal-title color-pink">Внимание!</div>
+        <p class="modal-text"></p>
+    </div>
+</div>

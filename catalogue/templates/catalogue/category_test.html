@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load category_tags %}
+{% load mptt_tags %}
+{% load basket_tags %}
+{% load common_tags %}
+{% load thumbnail %}
+{% load range_filter %}
+{% load humanize %}
+{% block seo_block %}
+    {% with seo_title=meta_tags|get_item:'seo_title' %}<title>{% if seo_title %}{{ seo_title|capfirst }}{% else %}{{ category.name|lower|capfirst }} – купить в интернет-магазине «ЧадоМаркет» в Москве{% endif %}</title>    {% endwith %}
+    {% with seo_description=meta_tags|get_item:'seo_description' %}<meta name="description" content="{% if seo_description %}{{ seo_description|capfirst }}{% else %}Купи {{ category.name|lower }} в интернет-магазине «ЧадоМаркет» и получи подарок! Бесплатная доставка по Москве{% endif %}">{% endwith %}
+    {% with seo_keywords=meta_tags|get_item:'seo_keywords' %}<meta name="keywords" content="{% if seo_keywords %}{{ seo_keywords|capfirst }}{% else %}{{ category.name|lower }}, {{ category.name|lower }} купить, {{ category.name|lower }} москва, {{ category.name|lower }} цена, {{ category.name|lower }} интернет-магазин{% endif %}">{% endwith %}
+{% endblock %}
+{% block content %}
+    <div class="container">
+        {% include "partials/breadcrumbs.html" with model=category %}
+        <div class="n-category">
+            <div class="row">
+                <div class="col-md-9  col-md-push-3">
+                    <div class="n-category__header">
+                        <div class="row">
+                            <div class="col-md-8">
+                                {% with seo_h1=meta_tags|get_item:'seo_h1' %}
+                                    <h1 class="n-category__title" data-category="{{ category.name }}">
+                                        {% if seo_h1 and seo_h1 != "None" %}{{ seo_h1|first_word_up }}{% else %}{{ category.name }}{% endif %}
+                                    </h1>
+                                {% endwith %}
+                                <span class="n-category__goods-count"><b
+                                        class="n-category__goods-count-val">{{ count_products }}</b> товаров</span>
+                            </div>
+                            <div class="col-md-4">
+                                {% include 'partials/sort.html' %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="category-filter  new-filter  hidden-sm  hidden-xs">
+                        {% include 'catalogue/partials/options_ajax_filter.html' %}
+                    </div>
+
+                    <div class="category-mobile-btns  visible-sm  visible-xs">
+                        <button class="btn  btn-sm  js-open-mobile-sorting" type="button">Сортировка</button>
+                        <button class="btn  btn-sm  js-open-mobile-filter" type="button">Фильтр</button>
+                    </div>
+
+                    <div id="productList" data-attributes-order="" data-selected-attr-filter="" data-current-filter-attr="">
+                    </div>
+                </div>
+                <div class="col-md-3 col-md-pull-9  hidden-sm  hidden-xs">
+                    <div class="categories">
+                        <div class="categories__root-name">{{ parent_category|lower|capfirst }}</div>
+                        <ul class="categories__list  js-categories">
+                            {% for cat in categories_filter %}
+                                <li class="categories__list-item {% if category.id == cat.id %} categories__list-item_open{% endif %}">
+                                    {% if cat.children.all %}
+                                        <span class="categories__list-item-name  categories__list-item-name_parent"
+                                              data-category-id="{{ cat.id }}">{{ cat }}</span>
+                                        <ul class="categories__list-sub">
+                                            {% for c in cat.children.all %}
+                                                <li class="categories__list-sub-item {% if category.id == c.id %} categories__list-sub-item_current{% endif %}">
+                                                    <span class="categories__list-item-name  categories__list-item-name_sub"
+                                                          data-category-id="{{ c.id }}"
+                                                          data-category-parent="{{ c.parent.name }}">{{ c }}</span>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="categories__list-item-name"
+                                              data-category-id="{{ cat.id }}">{{ cat }}</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% with seo_text=meta_tags|get_item:'seo_text' %}
+                {% if category.description and not url_seo %}
+                    <div class="text_block">
+                        <div class="row js-spoiler">
+                            <div class="text_block-spoiler-content  js-spoiler-content">
+                                <div id="cat_description_text">
+                                    {% if category.description %}{{ category.description|safe }}{% endif %}
+                                    {% if seo_text and category.description %}
+                                        <div style="border-bottom: 2px dotted #f682c1; margin: 20px 0;">
+                                            &nbsp;
+                                        </div> {% endif %}
+                                    {% if seo_text %}{{ seo_text|safe }}{% endif %}
+                                </div>
+                            </div>
+                            <div class="text_block-spoiler-link-wr">
+                                <span class="text_block-spoiler-link  js-spoiler-link">Смотреть полностью</span>
+                            </div>
+                        </div>
+                    </div>
+                {% elif seo_text and not url_seo %}
+                    <div class="text_block">
+                        <div class="row">
+                            <div id="cat_description_text">
+                                {{ seo_text|safe }}
+                            </div>
+                        </div>
+                    </div>
+                {% elif url_seo and seo_text %}
+                    <div class="text_block">
+                        <div class="row js-spoiler">
+                            <div class="text_block-spoiler-content  js-spoiler-content">
+                                <div id="cat_description_text">
+                                    {% if seo_text %}{{ seo_text|safe }}{% endif %}
+                                </div>
+                            </div>
+                            <div class="text_block-spoiler-link-wr">
+                                <span class="text_block-spoiler-link  js-spoiler-link">Смотреть полностью</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    {% comment %}
+    {% include 'partials/add_chado.html' %}
+    {% endcomment %}
+
+    {% include 'partials/filter_mobile.html' with categories_filter=categories_filter category=category parent_category='' min_price=min_price max_price=max_price brands_filter=brands_filter  brands_filter_category=brands_filter_category %}
+
+    {% include 'partials/sort_mobile.html' %}
+{% endblock %}
+{% block js_block %}{% endblock %}

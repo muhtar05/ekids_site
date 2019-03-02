@@ -1,0 +1,374 @@
+[
+  {
+    "fields": {
+      "display_name": "Принят. Ожидает оплаты",
+      "name": "Принят. Ожидает оплаты"
+    },
+    "model": "order.statusgroup",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "display_name": "Принят в обработку",
+      "name": "Принят в обработку"
+    },
+    "model": "order.statusgroup",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "display_name": "Ожидает подтверждения",
+      "name": "Ожидает подтверждения"
+    },
+    "model": "order.statusgroup",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "display_name": "Формирование заказа",
+      "name": "Формирование заказа"
+    },
+    "model": "order.statusgroup",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "display_name": "Заказ сформирован",
+      "name": "Заказ сформирован"
+    },
+    "model": "order.statusgroup",
+    "pk": 5
+  },
+  {
+    "fields": {
+      "display_name": "Заказ передан в службу доставки",
+      "name": "Заказ передан в службу доставки"
+    },
+    "model": "order.statusgroup",
+    "pk": 6
+  },
+  {
+    "fields": {
+      "display_name": "Доставлен",
+      "name": "Доставлен"
+    },
+    "model": "order.statusgroup",
+    "pk": 7
+  },
+  {
+    "fields": {
+      "display_name": "Отменен",
+      "name": "Отменен"
+    },
+    "model": "order.statusgroup",
+    "pk": 8
+  },
+  {
+    "fields": {
+      "display_name": "Заказ принят. Ожидает оплаты",
+      "group": 1,
+      "name": "Заказ принят. Ожидает оплаты"
+    },
+    "model": "order.orderstatus",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "display_name": "Заказ принят. Оплата получена",
+      "group": 2,
+      "name": "Заказ принят. Оплата получена"
+    },
+    "model": "order.orderstatus",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "display_name": "Заказ принят. Оплата при получении",
+      "group": 2,
+      "name": "Заказ принят. Оплата при получении"
+    },
+    "model": "order.orderstatus",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "display_name": "Запрос информации у поставщика",
+      "group": 2,
+      "name": "Запрос информации у поставщика"
+    },
+    "model": "order.orderstatus",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "display_name": "Ожидание ответа от поставщика",
+      "group": 2,
+      "name": "Ожидание ответа от поставщика"
+    },
+    "model": "order.orderstatus",
+    "pk": 5
+  },
+  {
+    "fields": {
+      "display_name": "Зарезервирован",
+      "group": 3,
+      "name": "Зарезервирован"
+    },
+    "model": "order.orderstatus",
+    "pk": 6
+  },
+  {
+    "fields": {
+      "display_name": "Обрабатывается колл-центром",
+      "group": 3,
+      "name": "Обрабатывается колл-центром"
+    },
+    "model": "order.orderstatus",
+    "pk": 7
+  },
+  {
+    "fields": {
+      "display_name": "Обеспечение заказа товаром",
+      "group": 4,
+      "name": "Обеспечение заказа товаром"
+    },
+    "model": "order.orderstatus",
+    "pk": 8
+  },
+  {
+    "fields": {
+      "display_name": "Заказ обеспечен товаром. Без доставки",
+      "group": 4,
+      "name": "Заказ обеспечен товаром. Без доставки"
+    },
+    "model": "order.orderstatus",
+    "pk": 9
+  },
+  {
+    "fields": {
+      "display_name": "Заказ обеспечен товаром. С доставкой",
+      "group": 4,
+      "name": "Заказ обеспечен товаром. С доставкой"
+    },
+    "model": "order.orderstatus",
+    "pk": 10
+  },
+  {
+    "fields": {
+      "display_name": "Ожидает доставку на склад SPSR",
+      "group": 4,
+      "name": "Ожидает доставку на склад SPSR"
+    },
+    "model": "order.orderstatus",
+    "pk": 11
+  },
+  {
+    "fields": {
+      "display_name": "Заказ доставлен на склад SPSR",
+      "group": 4,
+      "name": "Заказ доставлен на склад SPSR"
+    },
+    "model": "order.orderstatus",
+    "pk": 12
+  },
+  {
+    "fields": {
+      "display_name": "Заказ сформирован на складе SPSR",
+      "group": 5,
+      "name": "Заказ сформирован на складе SPSR"
+    },
+    "model": "order.orderstatus",
+    "pk": 13
+  },
+  {
+    "fields": {
+      "display_name": "Заказ передан на в службу доставки SPSR",
+      "group": 6,
+      "name": "Заказ передан на в службу доставки SPSR"
+    },
+    "model": "order.orderstatus",
+    "pk": 14
+  },
+  {
+    "fields": {
+      "display_name": "Заказ доставлен",
+      "group": 7,
+      "name": "Заказ доставлен"
+    },
+    "model": "order.orderstatus",
+    "pk": 15
+  },
+  {
+    "fields": {
+      "display_name": "Заказ отменен",
+      "group": 8,
+      "name": "Заказ отменен"
+    },
+    "model": "order.orderstatus",
+    "pk": 17
+  },
+  {
+    "fields": {
+      "name": "оплачено"
+    },
+    "model": "order.paymentstatus",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "name": "не оплачено"
+    },
+    "model": "order.paymentstatus",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "name": "Оплата картой"
+    },
+    "model": "order.paymenttype",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "name": "Наложенный платеж"
+    },
+    "model": "order.paymenttype",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "name": "Поступил",
+      "status_shop": 12
+    },
+    "model": "order.spsr_so_status",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "name": "Перезвон (не удалось дозвонится/клиент не может разговаривать)",
+      "status_shop": null
+    },
+    "model": "order.spsr_so_status",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "name": "Подтвержден",
+      "status_shop": null
+    },
+    "model": "order.spsr_so_status",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "name": "На сборке",
+      "status_shop": null
+    },
+    "model": "order.spsr_so_status",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "name": "Собран",
+      "status_shop": 13
+    },
+    "model": "order.spsr_so_status",
+    "pk": 5
+  },
+  {
+    "fields": {
+      "name": "Готов к отгрузке",
+      "status_shop": null
+    },
+    "model": "order.spsr_so_status",
+    "pk": 6
+  },
+  {
+    "fields": {
+      "name": "Передан на доставку",
+      "status_shop": 14
+    },
+    "model": "order.spsr_so_status",
+    "pk": 7
+  },
+  {
+    "fields": {
+      "name": "В процессе доставки",
+      "status_shop": null
+    },
+    "model": "order.spsr_so_status",
+    "pk": 8
+  },
+  {
+    "fields": {
+      "name": "На руках у курьера",
+      "status_shop": null
+    },
+    "model": "order.spsr_so_status",
+    "pk": 9
+  },
+  {
+    "fields": {
+      "name": "Пункт выдачи заказа",
+      "status_shop": 15
+    },
+    "model": "order.spsr_so_status",
+    "pk": 10
+  },
+  {
+    "fields": {
+      "name": "Доставлен",
+      "status_shop": 15
+    },
+    "model": "order.spsr_so_status",
+    "pk": 11
+  },
+  {
+    "fields": {
+      "name": "Не доставлен (на возврате)",
+      "status_shop": 17
+    },
+    "model": "order.spsr_so_status",
+    "pk": 12
+  },
+  {
+    "fields": {
+      "name": "Импортирован",
+      "status_shop": 11
+    },
+    "model": "order.spsr_po_status",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "name": "Поступил на склад",
+      "status_shop": 12
+    },
+    "model": "order.spsr_po_status",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "name": "В процессе приемки",
+      "status_shop": 12
+    },
+    "model": "order.spsr_po_status",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "name": "Оформление документов",
+      "status_shop": 12
+    },
+    "model": "order.spsr_po_status",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "name": "Принят",
+      "status_shop": 12
+    },
+    "model": "order.spsr_po_status",
+    "pk": 5
+  }
+]

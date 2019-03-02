@@ -1,0 +1,22 @@
+{% load range_filter %}
+<h2 class="tabs-content-title">Характеристики</h2>
+<div class="row  product-features">
+        {% with properties=product.get_property_info %}
+            {% for property_prod in properties %}
+                {% if forloop.first or forloop.counter == properties|take_half_plus_one %}
+                    <div class="col-sm-6  col-xs-12">
+                        <table>
+                            <tbody>
+                {% endif %}
+                                <tr data-code="{{ property_prod.code }}">
+                                        <th>{% if property_prod.name_show %}{{ property_prod.name_show|capfirst }}{% else %}{{ property_prod.name|capfirst }}{% endif %}</th>
+                                        <td>{{ property_prod.value|capfirst  }}</td>
+                                </tr>
+                {% if forloop.last or forloop.counter == properties|take_half  %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
+</div>

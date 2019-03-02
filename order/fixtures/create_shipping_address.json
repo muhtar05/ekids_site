@@ -1,0 +1,36 @@
+[
+  {
+    "model": "order.ShippingAddress",
+    "pk": 1,
+    "fields": {
+      "phone_number": "661210",
+      "title": "Address-1",
+      "first_name": "Иван",
+      "last_name": "Иванов",
+      "line1": "ул.Пушкина",
+      "line2": "д.Колотушкина",
+      "line3": "кв.10",
+      "line4": "г.Москва",
+      "state": "",
+      "country": "1",
+      "postcode": "000"
+    }
+  },
+  {
+    "model": "order.ShippingAddress",
+    "pk": 2,
+    "fields": {
+      "phone_number": "555555",
+      "title": "На хату Василю",
+      "first_name": "Василий",
+      "last_name": "Петров",
+      "line1": "ул.Кукушкина",
+      "line2": "д.12",
+      "line3": "кв.62",
+      "line4": "г.Кукуево",
+      "state": "",
+      "country": "1",
+      "postcode": "123"
+    }
+  }
+]

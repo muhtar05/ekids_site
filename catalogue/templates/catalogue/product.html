@@ -1,0 +1,753 @@
+{% extends 'base.html' %}
+{% load history_tags %}
+{% load basket_tags %}
+{% load category_tags %}
+{% load purchase_info_tags %}
+{% load thumbnail %}
+{% load range_filter %}
+{% load common_tags %}
+{% load humanize %}
+{% load cache %}
+{% load staticfiles %}
+{% block js_gtm %}
+    <script type="text/javascript">
+        (dataLayer = window.dataLayer || []).push({
+            'userCity': '{{ city_data }}',
+            'contentType': 'Карточка товара', // Тип контента страницы
+            'breadCrumbs': '{% include "partials/breadcrumbs_text.html" with model=product product_page=True parent_category=product.categories.first %} ' // Хлебные крошки
+        });
+    </script>
+{% endblock %}
+{% block counter_dynamic_appendix %}
+    <script type="text/javascript">
+    var _tmr = _tmr || [];
+    _tmr.push({
+        type: 'itemView',
+        productid: '{{ product.id }}',
+        pagetype: 'product',
+        list: '1',
+        totalvalue: {% if product.get_discount %}'{{ product.price_mrc|get_discount_price:product.get_discount.discount_value|floatformat:0 }}'{% else %}'{{ product.price_mrc|floatformat:0 }}'{% endif %}
+    });
+    </script>
+{% endblock %}
+{% block seo_block %}{% with seo_title=meta_tags|get_item:'seo_title' %}
+        <title>{% if seo_title %}{{ seo_title }}{% endif %}</title>{% endwith %}{% with seo_description=meta_tags|get_item:'seo_description' %}
+         <meta name="description" content="{% if seo_description %}{{ seo_description }}{% endif %}">    {% endwith %}    {% with seo_keywords=meta_tags|get_item:'seo_keywords' %}
+         <meta name="keywords" content="{% if seo_keywords %}{{ seo_keywords }}{% endif %}">    {% endwith %}
+{% endblock %}
+{% block pixel_event %}
+    fbq('track', 'ViewContent', {
+        content_ids: ['{{ product.id }}'],
+        content_type: 'product',
+        value: {% if product.get_discount %}{{ product.price_mrc|get_discount_price:product.get_discount.discount_value|floatformat:0 }}{% else %}{{ product.price_mrc|floatformat:0 }}{% endif %},
+        currency: 'RUB'
+    });
+{% endblock %}
+{% block sticky_product %}
+    <div class="sticky_header-product">
+        <div class="sticky_header-product-img">
+            <div class="sticky_header-product-img-in">
+                <img src="/media/{{ main_image }}" alt="">
+            </div>
+        </div>
+        <div class="sticky_header-product-name">{{ product }}</div>
+        <div class="sticky_header-product-rating hidden-sm">
+            {% if product.rating >= 0 %}
+                <span class="products-item-rating-stars">
+                    {% for i in product.rating|create_range %}
+                        <i class="ico ico-star-color"></i>
+                    {% endfor %}
+                    {% for i in product.rating|create_range_reverse %}
+                        <i class="ico ico-star"></i>
+                    {% endfor %}
+                </span>
+            {% else %}
+                <span class="products-item-rating-stars">
+                    {% for i in 5|create_range %}
+                        <i class="ico ico-star"></i>
+                    {% endfor %}
+                </span>
+            {% endif %}
+            <span class="products-item-rating-count">({{ product.rating|floatformat }})</span>
+        </div>
+        <div class="sticky_header-product-price">
+            {% if product.get_discount %}
+                <span class="product-price-current-val">{{ product.price_mrc|get_discount_price:product.get_discount.discount_value|floatformat:0|intcomma }} </span>
+                <span class="product-price-currency  rouble">Р</span>
+            {% else %}
+                <span class="product-price-current-val">{{ product.price_mrc|floatformat:0|intcomma }}</span>
+                <span class="product-price-currency  rouble">Р</span>
+            {% endif %}
+
+        </div>
+        <div class="sticky_header-product-btns clearfix">
+            <button class="product-add2cart  js-add2cart-from-sticky" type="button"
+                    data-stock="{% if product.num_in_stock > 0 and product.num_in_stock > product.num_allocated %}in{% else %}out{% endif %}">
+                <i  class="ico ico-cart-white"></i> В корзину
+            </button>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="container pagetype"  data-pagetype="Карточка товара">
+        {% include "partials/breadcrumbs.html" with model=product product_page=True parent_category=product.categories.first %}
+
+        <div class="product" data-id="{{ product.id }}">
+            <div class="product-card">
+                <form action="{% url 'basket:add' pk=product.pk %}" method="post">
+                {% with seo_h1=meta_tags|get_item:'seo_h1' %}
+                    <h1 class="product-name">{% if seo_h1 %}{{ seo_h1 }}{% else %}{{ product }}{% endif %}</h1>
+                {% endwith %}
+                    <div class="no-gutter">
+                        <div class="col-md-4  cl-sm-12  col-xs-12">
+                            <div class="product-left">
+                                <div class="product-imgs">
+                                    <div class="no-gutter">
+                                        <div class="col-md-10  col-md-push-2  col-sm-12 text-center">
+                                            {% with product.images.all as product_images %}
+                                            <div class="product-large_imgs js-gall-slider">
+                                                {% for prod_img in product_images %}
+                                                    <div class="product-large_imgs-item">
+                                                        <img src="/media/{{ prod_img.original }}" data-zoom-image="/media/{{ prod_img.original }}" alt="{{ product }}">
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <script>var imgs = [{% for prod_img in product_images %}{href : '/media/{{ prod_img.original }}'},{% endfor %}];</script>
+                                        </div>
+                                        <div class="col-md-2  col-md-pull-10  col-sm-12">
+                                            <div class="product-imgs-gall">
+                                                <div class="product-imgs-gall-thubms js-gall-thumbs">
+                                                    {% for prod_img in product_images %}
+                                                        {% thumbnail prod_img.original "42x46" as im %}
+                                                            <div class="product-imgs-gall-thumb {% if forloop.first %}active{% endif %}">
+                                                                <img src="{{ im.url }}" alt="{{ product }}">
+                                                            </div>
+                                                        {% endthumbnail %}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4  col-sm-6  col-xs-12">
+                            <div class="product-center">
+                                <div class="product-info">
+                                    {% if product.item_id != None %}
+                                        <!-- Для мобильного вида-->
+                                        <div class="visible-sm  visible-xs">
+                                            <div class="product-variants  product-variants--top">
+                                                <div class="product-variants-title">Варианты расцветки</div>
+                                                <div class="product-variants-list  product-variants--colors  js-product-variants  js-product-variants-colors clearfix">
+                                                    {% thumbnail main_image "42x46" as im %}
+                                                        <div class="product-variants-slide  active">
+                                                            <img data-variant-id="{{ product.id }}"
+                                                                 class="variant-item" src="{{ im.url }}"
+                                                                alt="">
+                                                        </div>
+                                                    {% endthumbnail %}
+                                                    {% for variant in variants %}
+                                                        {% if not product.size_item_id %}
+                                                             <div class="product-variants-slide">
+                                                                {% thumbnail variant.main_image "42x46" as im %}
+                                                                    <img data-variant-id="{{ variant.pk }}"
+                                                                         class="variant-item" src="{{ im.url }}"
+                                                                        alt="">
+                                                                {% endthumbnail %}
+                                                            </div>
+                                                        {% elif  product.size_item_id and product.size_item_id != variant.size_item_id %}
+                                                            <div class="product-variants-slide">
+                                                                {% thumbnail variant.main_image "42x46" as im %}
+                                                                    <img data-variant-id="{{ variant.pk }}"
+                                                                         class="variant-item" src="{{ im.url }}"
+                                                                        alt="">
+                                                                {% endthumbnail %}
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% if product.size_item_id %}
+                                                <div class="product-variants">
+                                                    <div class="product-variants-title">Размеры</div>
+                                                    <ul class="product-variants-list  product-variants--sizes  product-variants--sizes--6  product-sizes-list  clearfix">
+                                                        {% for sp in all_sizes %}
+                                                            <li data-size-item_id="{{ product.size_item_id }}"
+                                                                  data-product-id="{{ sp|get_size_product:product.size_item_id }}"
+                                                                  data-size="{{ sp }}" class="products-item-sizes-item size-item product-variants-item {% if not sp in size_color_variants_stock  %} disabled{% endif %}">{{ sp }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- End -->
+                                    {% endif %}
+                                    <div class="clearfix">
+
+                                        {% if brand_info.name %}
+                                            {% if brand_info.image %}
+                                                <div class="product-brand">
+                                                    <a href="{% url 'brand_page' slug=brand_info.slug %}">
+                                                        <img src="/media/{{ brand_info.image }}"
+                                                             alt="{{ brand_info.name }}">
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <div class="product-brand-name">
+                                                    <a href="{% url 'brand_page' slug=brand_info.slug %}">
+                                                        {{ brand_info.name }}
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                        <div class="product-info-right">
+                                            <table>
+                                                <tbody>
+                                                <tr>
+                                                    <td>Код <span class="hidden-xs">товара</span>:</td>
+                                                    <td>
+                                                        <span
+                                                            class="product-sku">{% if product.artikul %}{{ product.artikul|capfirst }}{% endif %}</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="product-country">Страна:</td>
+                                                    {% with country=product|get_attribute:'country' %}
+                                                    <td>{% if country %}
+                                                        {{ country|capfirst  }}{% endif %}</td>
+                                                    {% endwith %}
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                            <div class="product-item-rating">
+                                                <span class="product-item-rating-stars">
+                                                    {% if product.rating >= 0 %}
+                                                        <span class="products-item-rating-stars">
+                                                            {% for i in product.rating|create_range %}
+                                                                <i class="ico ico-star-color"></i>
+                                                            {% endfor %}
+                                                            {% for i in product.rating|create_range_reverse %}
+                                                                <i class="ico ico-star"></i>
+                                                            {% endfor %}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="products-item-rating-stars">
+                                                            {% for i in 5|create_range %}
+                                                                <i class="ico ico-star"></i>
+                                                            {% endfor %}
+                                                        </span>
+                                                    {% endif %}
+                                                </span>
+                                                <span class="products-item-rating-count">({{ product.rating|floatformat }})</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <ul class="product-benefits">
+                                        <li class="product-benefits-1">Гарантия 12 месяцев</li>
+                                        <li class="product-benefits-2">Гарантия лучшей цены</li>
+                                        <li class="product-benefits-4">Безопасность для вашего ребенка</li>
+                                        <li class="product-benefits-3">Легкий возврат в течении 14 дней</li>
+                                    </ul>
+                                    <div class="hidden-sm  hidden-xs">
+                                        {% if variants and product.item_id != None %}
+                                            <div class="product-variants">
+                                                <div class="product-variants-title">Варианты расцветки</div>
+                                                <div class="product-variants-list  product-variants--colors  js-product-variants js-product-variants-colors clearfix">
+                                                    {% thumbnail main_image "42x46" as im %}
+                                                        <div class="product-variants-slide active">
+                                                            <img data-variant-id="{{ product.id }}" class="variant-item" src="{{ im.url }}" alt="">
+                                                        </div>
+                                                    {% endthumbnail %}
+                                                    {% for variant in variants %}
+                                                        {% if not product.size_item_id %}
+                                                            <div class="product-variants-slide">
+                                                                {% thumbnail variant.main_image "42x46" as im %}
+                                                                    <img data-variant-id="{{ variant.pk }}" class="variant-item" src="{{ im.url }}" alt="">
+                                                            {% endthumbnail %}
+                                                            </div>
+                                                        {% elif  product.size_item_id and product.size_item_id != variant.size_item_id %}
+                                                            <div class="product-variants-slide">
+                                                                {% thumbnail variant.main_image "42x46" as im %}
+                                                                    <img data-variant-id="{{ variant.pk }}" class="variant-item" src="{{ im.url }}" alt="">
+                                                                {% endthumbnail %}
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        {% if product.size_item_id %}
+                                            <div class="product-variants">
+                                                <div class="product-variants-title">Размеры</div>
+                                                <ul class="product-variants-list  product-variants--sizes  product-variants--sizes--6  product-sizes-list  clearfix">
+                                                    {% for sp in all_sizes %}
+                                                        <li data-size-item_id="{{ product.size_item_id }}"
+                                                              data-product-id="{{ sp|get_size_product:product.size_item_id }}"
+                                                              data-size="{{ sp }}" class="products-item-sizes-item size-item product-variants-item {% if not sp in size_color_variants_stock  %} disabled{% endif %}">{{ sp }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4  col-sm-6  col-xs-12">
+                            <div class="product-right">
+                                <div class="product-cart">
+                                    <div class="product-price  clearfix">
+                                        {% if product.get_discount %}
+                                            <div class="product-price-current">
+                                                <span class="product-price-current-val" data-current-price="{{ product.price_mrc|floatformat:0}}">{{ product.price_mrc|get_discount_price:product.get_discount.discount_value|floatformat:0|intcomma }}</span>
+                                                <span class="product-price-currency  rouble">Р</span>
+                                            </div>
+                                            <div class="product-price-old">
+                                                <span class="product-price-old-val">{{ product.price_mrc|floatformat:0|intcomma }}</span>
+                                                <span class="product-price-currency  rouble">Р</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="product-price-current">
+                                                <span class="product-price-current-val" data-current-price="{{ product.price_mrc|floatformat:0}}">{{ product.price_mrc|floatformat:0|intcomma }}</span>
+                                                <span class="product-price-currency  rouble">Р</span>
+                                            </div>
+                                        {% endif %}
+                                        <div class="product-stock">
+                                            {% if product.num_in_stock > 0 and product.num_in_stock > product.num_allocated %}
+                                                <span class="product-stock-in">в наличии</span>
+                                            {% else %}
+                                                <span class="product-stock-out">нет в наличии</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <input class="prod_id" type="hidden" name="product-id" value="{{ product.pk }}">
+                                    {% include "catalogue/partials/add_to_basket_form.html" %}
+                                    <div class="product-buy_btn  clearfix">
+                                        <input id="all_quantity" name="all_quantity" type="hidden"
+                                               value="{{ product.num_in_stock }}">
+                                        <button id="product-add-to-basket" class="product-add2cart  js-add2cart"
+                                                type="submit"
+                                                data-stock="{% if product.num_in_stock > 0  and product.num_in_stock > product.num_allocated %}in{% else %}out{% endif %}">
+                                            <i class="ico ico-cart-white"></i> В корзину
+                                        </button>
+                                        <button class="product-oneclick  js-fastbuy"
+                                                type="button"
+                                                data-stock="{% if product.num_in_stock > 0  and product.num_in_stock > product.num_allocated %}in{% else %}out{% endif %}">Купить в 1 клик</button>
+                                    </div>
+                                {% with product_discount=product.get_discount %}
+                                    {% if product_discount %}
+                                        {% with parse_time=product_discount.ending_time_discount %}
+                                            <div class="product-label">
+                                                <span class="goods__item-label-discount">
+                                                <span class="goods__item-label-discount-timer"><b class="color-pink">{{ parse_time.0 }} дн {{ parse_time.1 }}:{{ parse_time.2 }} мин</b> до конца акции</span>
+                                                <span class="goods__item-label-discount-val" data-discount-val="{{ product_discount.discount_value }}">%</span>
+                                            </span>
+                                             </div>
+                                        {% endwith %}
+                                    {% endif %}
+                                {% endwith %}
+                                    <!--noindex-->
+                                    <div class="product-flycart">
+                                        <div class="clearfix">
+                                            <div class="product-stock">
+                                                {% if product.num_in_stock > 0 and product.num_in_stock > product.num_allocated %}
+                                                    <span class="product-stock-in">в наличии</span>
+                                                {% else %}
+                                                    <span class="product-stock-out">нет в наличии</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if product.get_discount %}
+                                                <div class="product-price-current">
+                                                    <span class="product-price-current-val">{{ product.price_mrc|get_discount_price:product.get_discount.discount_value|floatformat:0|intcomma }}</span>
+                                                    <span class="product-price-currency  rouble">Р</span>
+                                                </div>
+                                            {% else %}
+                                                <div class="product-price-current">
+                                                    <span class="product-price-current-val">{{ product.price_mrc|floatformat:0|intcomma }}</span>
+                                                    <span class="product-price-currency  rouble">Р</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="clearfix">
+                                            <button class="product-add2cart  js-add2cart" type="submit"><i
+                                                    class="ico ico-cart-white"></i> В корзину
+                                            </button>
+                                            <button id="oneclick" class="product-oneclick  js-fastbuy"
+                                                    type="button"
+                                                    data-stock="{% if product.num_in_stock > 0  and product.num_in_stock > product.num_allocated %}in{% else %}out{% endif %}">Купить в 1 клик</button>
+                                        </div>
+                                    </div>
+                                    <!--/noindex-->
+                                </div>
+                                <div class="product-delivery">
+                                    <table>
+                                        <thead>
+                                        <tr>
+                                            <td class="product-delivery-title">Доставка:</td>
+                                            <td>
+                                                <div class="product-delivery-city  js-city"
+                                                     data-fancybox-href="#city_list">
+                                                <span class="product-delivery-city-name"
+                                                      title="{{ city_data }}">{{ city_data }}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr class="product-delivery-courier">
+                                            <td>Курьерcкая доставка ТК DPD:</td>
+                                            <td>
+                                                <div class="product-delivery-td_in">
+                                                    {% if product.price_mrc|floatformat:0|free_delivery:city_data %}
+                                                        <span class="product-delivery-courier-price  free">Бесплатно</span>
+                                                        <span class="product-delivery-date  product-delivery-courier-date">{{ day_for_free_delivery }}</span>
+                                                    {% else %}
+                                                        <span class="product-delivery-courier-price"></span>
+                                                        <div class="product-delivery-tooltip">
+                                                            <div class="product-delivery-tooltip-text">
+                                                                <p>К сожалению, этот товар в выбранный вами город доставить невозможно</p>
+                                                            </div>
+                                                        </div>
+                                                        <span class="product-delivery-date  product-delivery-courier-date"></span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                            <tr class="product-delivery-pickup">
+                                                <td>Пункты выдачи заказов:</td>
+                                                <td>
+                                                     {% if product.price_mrc|floatformat:0|free_delivery:city_data %}
+                                                        <span class="product-delivery-pickup-price  free">Бесплатно</span>
+                                                        <span class="product-delivery-date  product-delivery-pickup-date">{{ day_for_free_delivery }}</span>
+                                                     {% else %}
+                                                        <span class="product-delivery-pickup-price"></span>
+                                                        <span class="product-delivery-date  product-delivery-pickup-date"></span>
+                                                     {% endif %}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            {% if product.primary_recommendations.count > 0 and product.num_in_stock == 0 or product.num_in_stock == product.num_allocated %}
+                {% include "catalogue/partials/also_buy_with_product.html" with also_products=product.primary_recommendations.all %}
+            {% endif %}
+
+            <div class="tabs-wrapper">
+                <div class="tabs  clearfix  js-tabs">
+                    <div class="swiper-container  js-tabs-index">
+                        <div class="swiper-wrapper">
+
+                            <div class="swiper-slide">
+                                <a href="#p_descr" class="tabs-item  active">Описание</a>
+                            </div>
+
+                            <div class="swiper-slide">
+                                <a href="#p_features" class="tabs-item">Характеристики</a>
+                            </div>
+
+                            <div class="swiper-slide">
+                                <a href="#p_reviews" class="tabs-item">Отзывы {% if product.reviews.approved.all|length > 0 %}<span class="tabs-reviews-count">{{ product.reviews.approved.all|length }}</span>{% endif %}</a>
+                            </div>
+
+                            <div class="swiper-slide">
+                                <a href="#p_delivery" class="tabs-item">Оплата и доставка</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tabs-content  active" id="p_descr">
+                    <div class="row js-spoiler">
+                        {% if product.video_container %}
+                            <div class="col-sm-5  col-xs-12  text-center  text_block-img">
+                                <div class="video-container">
+                                    <iframe width="415" height="233" class="lazyload" data-src="{{ product.video_container }}" frameborder="0"
+                                            allowfullscreen></iframe>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="{% if product.video_container %}col-sm-7{% else %}col-sm-12{% endif %}  col-xs-12">
+                            <h2 class="tabs-content-title">Описание</h2>
+                            {% if product.assortment %}
+                                <p><strong>Внимание! Уважаемые покупатели, в настоящее время данный товар представлен в ассортименте без возможности выбора.
+                                    Мы работаем над тем, чтобы это исправить. Цена указана за одну единицу товара.</strong></p><br>
+                            {% endif %}
+                            {% if product.description %}
+                                <div class="product-description-content  js-spoiler-content">
+                                    <p>{{ product.description|safe }}</p>
+                                {% with seo_text=meta_tags|get_item:'seo_text' %}
+                                    <div style="border-bottom: 2px dotted #f682c1; margin: 20px 0;">&nbsp;</div>
+                                     {% if seo_text %}{{ seo_text|safe}}{% endif %}
+                                {% endwith %}
+                                </div>
+                                <div class="text_block-spoiler-link-wr">
+                                    <span class="text_block-spoiler-link  js-spoiler-link">Смотреть полностью</span>
+                                </div>
+                            {% else %}
+                                <div>
+                                    <p>Описание товара находится в стадии заполнения.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% cache 5000 info_property product.id  %}
+                <div class="tabs-content" id="p_features">
+                    {% include "catalogue/partials/product_info_property.html" %}
+                </div>
+                {% endcache %}
+
+                {% cache 5000 product_review product.id  %}
+                <div class="tabs-content" id="p_reviews">
+                    {% include "catalogue/partials/product_review.html" %}
+                </div>
+                {% endcache %}
+
+                <div class="tabs-content" id="p_delivery">
+                    <h2 class="tabs-content-title">Оплата и доставка</h2>
+                    <div class="row">
+                        <div class="col-sm-6 col-xs-12">
+                            <div class="product-delivery-item  product-delivery-item--first">
+                                <h3><i class="ico ico-wallet"></i> Оплата</h3>
+                                <ul>
+                                    <li>Банковской картой:
+                                        <ul>
+                                            <li>on-line на сайте (100% оплата желаемого товара при любой форме
+                                                доставки).
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>Наличными и банковской картой:
+                                        <ul>
+                                            <li>при курьерской доставке;</li>
+                                            <li>в пунктах выдачи заказов (ПВЗ);</li>
+                                            <li>в сети автоматизированных почтовых станций (Постаматы);</li>
+                                            <li>в отделениях Почты России.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xs-12">
+                            <div class="product-delivery-item">
+                                <h3><i class="ico ico-truck"></i> Доставка</h3>
+                                <ul>
+                                    <li>Курьерской службой более чем в 4500 городах России.</li>
+                                    <li>В пунктах выдачи заказов (ПВЗ).</li>
+                                    <li>В сети автоматизированных почтовых станций (Постаматы).</li>
+                                    <li>Почтой России.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if product.primary_recommendations.count > 0 and product.num_in_stock > 0 and product.num_in_stock > product.num_allocated %}
+            {% include "catalogue/partials/also_buy_with_product.html" with also_products=product.primary_recommendations.all %}
+        {% endif %}
+
+
+        {% recently_viewed_products current_product=product %}
+
+        <div class="helpback  hidden-sm hidden-sm">
+            <p>
+                <span class="color-pink">Не нашли то, что искали?</span> <i class="ico ico-pen hidden-sm hidden-xs"></i>
+                <a class="js-fancy color-blue" href="#feedback">Свяжитесь с нами</a>
+            </p>
+        </div>
+    </div>
+
+    <!--noindex-->
+    <div class="hidden">
+        <div id="fastbuy" class="modal">
+            <div class="modal-title">Купить в 1 клик</div>
+            <div class="fastbuy">
+                <div class="fastbuy-card">
+                   <div class="goods__item">
+                        <div class="goods__img hidden-xs"><img class="goods__img-img" src=""></div>
+                        <div class="goods__info">
+                            <span class="goods__name"></span>
+                            <div class="goods__bot">
+                                <span class="goods__price">
+                                    {% if product.get_discount %}
+                                        <span class="goods__price-value" >{{ product.price_mrc|get_discount_price:product.get_discount.discount_value|floatformat:0|intcomma }}</span> <span class="goods__currency rouble">Р</span>
+                                        <span class="goods__price-old">{{ product.price_mrc|floatformat:0|intcomma }}</span>
+                                    {% else %}
+                                        <span class="goods__price-value">{{ product.price_mrc|floatformat:0|intcomma }}</span> <span class="goods__currency rouble">Р</span>
+                                    {% endif %}
+                                </span>
+                                <span class="goods__stock  goods__stock_in">есть</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <form class="js-fastbuy-order" action="/common/buy_in_one_click/" method="post">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <input type="text" placeholder="Телефон *" name="phone">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" placeholder="Имя" name="name">
+                        <input type="hidden" name="product-id" id="buy_product_id">
+                    </div>
+
+                    <div class="text-center">
+                        <input class="fastbuy-product-id" type="hidden" name="">
+                        <button class="fastbuy-btn btn  btn-green" type="submit">Оформить заказ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal  modal-product border-top  hidden" id="productmodal">
+        <div class="modal-product-in">
+            <div class="modal-product-name"></div>
+            <div class="clearfix">
+                <div class="product-imgs">
+                    <div class="no-gutter">
+                        <div class="col-md-10  col-md-push-2  col-sm-12 text-center">
+                            <div class="product-imgs-main-wr  easyzoom">
+                                <a rel="modal" class="product-imgs-main js-fancy"
+                                   href=""> <img src="" alt="" data-zoom-image="">
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-2  col-md-pull-10  col-sm-12">
+                            <div class="product-imgs-gall ">
+                                <span class="products-item-gall-prev  js-product-item-gall-prev swiper-button-disabled"></span>
+                                <div class="swiper-container js-modal-product-item-gall">
+                                    <div class="swiper-wrapper"></div>
+                                </div>
+                                <span class="products-item-gall-next  js-product-item-gall-next"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-product-right">
+                    <div class="modal-product-cart">
+                        <div class="modal-product-offer">
+                            <div class="modal-product-price">
+                                <span class="product-price-current-val"></span> <span class="product-price-currency rouble">Р</span>
+                            </div>
+                            <div class="modal-product-price-old product-price-old">
+                                <span class="product-price-old-val"></span> <span class="product-price-currency rouble">Р</span>
+                            </div>
+                            <span class="modal-product-stock"></span>
+                        </div>
+                        {% comment %}<div class="product-btns"><button class="product-btns-item  product-btns-item-compare" title="Доабвить к сравнению"><i class="ico ico-compare"></i></button><button class="product-btns-item  product-btns-item-favorites" title="Доабвить к избранное"><i class="ico ico-favorites"></i></button></div>{% endcomment %}
+
+                        <div class="product-buy_btn   clearfix">
+                            <form action="" method="post" id="basket_form">
+                                {% csrf_token %}
+                                <input id="id_quantity" name="quantity" type="hidden" value="1">
+                                <button class="product-add2cart  js-fastview-add2cart" type="submit" data-stock=""><i class="ico ico-cart-white"></i> В корзину
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="modal-product-info clearfix">
+                        <div class="modal-product-brand"></div>
+                        <div class="product-info-right">
+                            <table>
+                                <tbody>
+                                <tr>
+                                    <td>Код <span class="hidden-xs">товара</span>:</td>
+                                    <td><span class="product-sku"></span></td>
+                                </tr>
+                                <tr>
+                                    <td>Страна:</td>
+                                    <td><span class="product-country"></span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <div class="modal-product-rating"></div>
+                        </div>
+                    </div>
+                    <div class="product-variants">
+                        <div class="product-variants-title">Варианты расцветки</div>
+                        <div class="product-variants-list  product-variants--colors  js-modal-product-variants"></div>
+                    </div>
+                    <div class="modal-product-addi">
+                        <span class="modal-product-addi-link" data-href="modal-product-features">Характеристики</span>
+                        <span class="modal-product-addi-link" data-href="modal-product-delivery">Условия доставки</span>
+                        <div class="modal-product-addi-content modal-product-features">
+                            <div class="modal-product-addi-content-title">
+                                Характеристики
+                            </div>
+                            <i class="modal-product-addi-content-close"></i>
+
+                            <div class="attributes-wrapper product-features">
+                                <table class="attributes">
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-product-addi-content modal-product-delivery">
+                            <div class="modal-product-addi-content-title">Доставка</div>
+                            <i class="modal-product-addi-content-close"></i>
+                            <div class="product-delivery">
+                                <table class="table">
+                                    <tr>
+                                        <td>Курьеcкая доставка ТК DPD:</td>
+                                        <td>
+                                            <span class="product-delivery-pickup-price courier"></span>
+                                            <span class="product-delivery-date  product-delivery-pickup-date courier"></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Пункты выдачи заказов:</td>
+                                        <td>
+                                            <span class="product-delivery-pickup-price pvz"></span>
+                                            <span class="product-delivery-date  product-delivery-pickup-date pvz"></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-product-bot">
+                <a class="modal-product-more btn  btn-blue  btn-sm" href="">Больше информации о товаре</a>
+            </div>
+        </div>
+        <span class="modal-product-close fancybox-close" onclick="closeFastView();"></span>
+    </div>
+    <!--/noindex-->
+
+{% endblock %}
+{% block js_block %}
+    <script src="{% static 'js/product.js' %}"></script>
+    <script type="text/javascript">
+        //Форма купить в 1 клик на странице товара
+        $('form.js-fastbuy-order').validate({
+            errorClass: 'error form-error',
+            errorElement: 'p',
+            rules:{
+               phone:{
+                   required: true
+               }
+            },
+            messages:{
+              phone:{
+                   required: "Это поле обязательно для заполнения"
+               }
+            }
+        });
+    </script>
+
+{% endblock %}

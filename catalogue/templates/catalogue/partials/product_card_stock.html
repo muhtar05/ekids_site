@@ -1,0 +1,102 @@
+{% load thumbnail %}
+{% load purchase_info_tags %}
+{% load basket_tags %}
+{% load humanize %}
+{% load range_filter %}
+{% load category_tags %}
+{% load common_tags %}
+{% load staticfiles %}
+{% load product_tags %}
+
+{% get_discount_for_product_new id=p.id is_discount=p.is_discount as product_discount %}
+<div class="col-md-4  col-sm-6">
+    <div class="goods__item" data-id="{{ p.id }}" data-name="{{ p.title }}" data-artikul="{{ p.artikul }}" data-position="{{ counter }}"
+         data-price="{% if product_discount %}{{ p.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0 }}{% else %}{{ p.price_mrc|floatformat:0 }}{% endif %}"
+         data-brand-name="{{ p.brand_name }}" data-category-name="{{ p.category_name }}" data-variant-name="{{ p.variant_name }}">
+        <div class="goods__item-in">
+            <div class="goods__img">
+                    {% thumbnail p.main_image "261x261" as im %}
+                        <a onclick="tagManProductClickAjax({{ p.id }}, '{{ page_type }}', {{ counter }}, this.href); return !ga.loaded;"
+                           href="{% url 'catalogue:detail' p.slug p.pk %}"><img
+                                src="{% static 'img/placeholder.png' %}" data-src="{{ im.url }}" class="lazyload" alt="{{ p.title }}"></a>
+                    {% endthumbnail %}
+            </div>
+            <div class="goods__info">
+                <a class="goods__name"
+                   onclick="tagManProductClickAjax({{ p.id }}, '{{ page_type }}', {{ counter }}, this.href); return !ga.loaded;"
+                   href="{% url 'catalogue:detail' p.slug p.pk %}">{{ p.title }}</a>
+                <div class="goods__bot">
+                    <form action="{% url 'basket:add' pk=p.pk %}" method="post">
+                        {% csrf_token %}
+                        <input class="all_quantity" name="all_quantity" type="hidden" value="{{ p.num_in_stock }}">
+                        <input class="id_quantity" name="quantity" type="hidden" value="1">
+                        <span class="goods__price">
+                            {% if product_discount %}
+                                <span class="goods__price-value" data-price="{{ p.price_mrc|get_discount_price:product_discount.discount_value }}">{{ p.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0|intcomma }}</span> <span class="goods__currency rouble">Р</span>
+                                <span class="goods__price-old">{{ p.price_mrc|floatformat:0|intcomma }}</span>
+                            {% else %}
+                                <span class="goods__price-value" data-price="{{ p.price_mrc }}">{{ p.price_mrc|floatformat:0|intcomma }}</span> <span class="goods__currency rouble">Р</span>
+                            {% endif %}
+                        </span>
+                            <span class="goods__stock  goods__stock_in">есть</span>
+                        <button class="goods__buy  js-buy" type="submit"
+                                title="В корзину"
+                                data-stock="in"><span class="buy-button">Купить</span></button>
+                    </form>
+                </div>
+            </div>
+            {% if p.size_item_id %}
+                <div class="goods__variants">
+                    <div class="goods__variants-name">Размеры в
+                        наличии
+                    </div>
+                    <div class="goods__variants-list">
+                        {% for size in p.get_sizes_category %}
+                            <a href="{% url 'catalogue:detail' p.slug p.pk %}#size_{{ size.1 }}"
+                               onclick="tagManProductClickAjax({{ p.id }}, '{{ page_type }}', {{ counter }}, this.href); return !ga.loaded;"
+                               class="goods__variants-item {% if p.get_size_value == size.0 %}active{% endif %}"
+                               data-variant-id="{{ size.1 }}">{{ size.0 }}</a>{% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            <div class="goods__photos js-goods-photos js-products-item-gall">
+                <div class="slick-slide">
+                        <div class="goods__photos-item  goods__photos-item_active"
+                             data-variant-id="{{ p.id }}">
+                            {% thumbnail p.main_image "95x95" as im %}
+                                <img onclick="tagManProductClickAjax({{ p.id }}, '{{ page_type }}', {{ counter }})" src="{% static 'img/placeholder.png' %}" data-src="{{ im.url }}" class="lazyload">
+                            {% endthumbnail %}
+                        </div>
+                </div>
+                {% for variant in all_variants %}
+                    {% if p.item_id == variant.item_id and p.pk != variant.pk%}
+                        <div class="slick-slide">
+                            <div class="goods__photos-item"
+                                 data-variant-id="{{ variant.pk }}">
+                                {% thumbnail variant.main_image "95x95" as im %}
+                                    <img onclick="tagManProductClickAjax({{ variant.pk }}, '{{ page_type }}', {{ counter }})"
+                                         src="{% static 'img/placeholder.png' %}" data-src="{{ im.url }}"
+                                         class="lazyload" alt="">
+                                {% endthumbnail %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="goods__item-label">
+            {% if product_discount %}
+                <span class="goods__item-label-discount">
+                    {% with parse_time=product_discount.ending_time_discount %}
+                        <span class="goods__item-label-discount-timer"><b class="color-pink">{{ parse_time.0 }} дн {{ parse_time.1 }}:{{ parse_time.2 }} мин</b> до конца акции</span>
+                    {% endwith %}
+                    <span class="goods__item-label-discount-val">%</span>
+                </span>
+            {% endif %}
+            {% if p.date_created|is_new %}
+                <i class="goods__item-label-new ico ico-new-small"></i>
+            {% endif %}
+        </div>
+    </div>
+</div>
+

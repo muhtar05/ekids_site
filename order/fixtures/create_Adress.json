@@ -1,0 +1,42 @@
+[
+  {
+    "model": "address.Country",
+    "fields": {
+      "iso_3166_1_a2": "1",
+      "iso_3166_1_a3": "1",
+      "iso_3166_1_numeric": "1",
+      "printable_name": "Россия",
+      "name": "Россия"
+    }
+  },
+  {
+    "model": "address.Country",
+    "fields": {
+      "iso_3166_1_a2": "10",
+      "iso_3166_1_a3": "10",
+      "iso_3166_1_numeric": "10",
+      "printable_name": "ОАЭ",
+      "name": "Объединенные Арабские Эмираты"
+    }
+  },
+  {
+    "model": "address.Country",
+    "fields": {
+      "iso_3166_1_a2": "2",
+      "iso_3166_1_a3": "2",
+      "iso_3166_1_numeric": "2",
+      "printable_name": "Монголия",
+      "name": "Монголия"
+    }
+  },
+  {
+    "model": "address.Country",
+    "fields": {
+      "iso_3166_1_a2": "3",
+      "iso_3166_1_a3": "3",
+      "iso_3166_1_numeric": "3",
+      "printable_name": "Никарагуа",
+      "name": "Республика Никарагуа"
+    }
+  }
+]

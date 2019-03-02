@@ -1,0 +1,58 @@
+[
+  {
+    "model": "order.OrderStatus",
+    "fields": {
+      "number": "01",
+      "site": "example.com",
+      "_basket": "",
+      "user": "1",
+      "_billing_address": "",
+      "_currency": "",
+      "total_incl_tax": 12000.0,
+      "total_excl_tax": 11000.0,
+      "shipping_incl_tax": 10000.0,
+      "shipping_excl_tax": 9000.0,
+      "_post_id": "",
+      "shipping_address": "1",
+      "_shipping_method": "",
+      "shipping_code": "",
+      "status": "1",
+      "_payment_status": "",
+      "payment_type": 1,
+      "shipment_status": "1",
+      "_guest_email": "",
+      "date_placed": "2016-12-04",
+      "_pipeline": "",
+      "_cascade": "",
+      "comment": "Bla-bla..."
+    }
+  },
+  {
+    "model": "order.OrderStatus",
+    "fields": {
+      "number": "02",
+      "site": "example.com",
+      "_basket": "",
+      "user": "1",
+      "_billing_address": "",
+      "_currency": "",
+      "total_incl_tax": 2000.0,
+      "total_excl_tax": 1000.0,
+      "shipping_incl_tax": 1000.0,
+      "shipping_excl_tax": 900.0,
+      "_post_id": "",
+      "shipping_address": "1",
+      "_shipping_method": "",
+      "shipping_code": "",
+      "status": "2",
+      "_payment_status": "",
+      "payment_type": 1,
+      "shipment_status": "1",
+      "_guest_email": "",
+      "date_placed": "2016-12-04",
+      "_pipeline": "",
+      "_cascade": "",
+      "comment": "Bla-bla..."
+    }
+  }
+]

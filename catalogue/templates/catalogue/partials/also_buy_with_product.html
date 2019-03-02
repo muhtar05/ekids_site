@@ -1,0 +1,146 @@
+{% load thumbnail %}
+{% load range_filter %}
+{% load humanize %}
+{% load purchase_info_tags %}
+{% load product_tags %}
+{% load common_tags %}
+{% load staticfiles %}
+
+<div class="section  section-slider  section-similargoods">
+    <h2 class="section-title">
+        <i class="ico ico-similar  hidden-xs"></i>
+        <span class="color-pink">Похожие</span> товары
+    </h2>
+    <div class="products-carousel also_buy" data-page-type="Похожие товары" >
+        <div class="swiper-container js-products-carousel">
+            <div class="swiper-wrapper">
+                {% for p in also_products %}
+                    {% with prod=p.recommendation %}
+
+                    {% if prod.num_in_stock > 0 and prod.num_in_stock > prod.num_allocated %}
+
+                        {% get_discount_for_product_new id=prod.id is_discount=prod.is_discount as product_discount %}
+                        <div class="swiper-slide">
+                            <div class="goods__item" data-id="{{ prod.id }}" data-name="{{ prod.title }}"
+                                 data-artikul="{{ prod.artikul }}" data-position="{{ forloop.counter }}"
+                                 data-price="{% if product_discount %}{{ prod.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0 }}{% else %}{{ prod.price_mrc|floatformat:0 }}{% endif %}"
+                                 data-brand-name="{{ prod.brand_name }}" data-category-name="{{ prod.category_name }}"
+                                 data-variant-name="{{ prod.variant_name }}">
+                                <div class="goods__item-in">
+                                    <div class="goods__img">
+                                        {% thumbnail prod.main_image "180x241" as im %}
+                                            <a onclick="tagManProductClickAjax({{ prod.id }}, 'Похожие товары', {{ forloop.counter }}, this.href); return !ga.loaded;"
+                                               href="/product/{{ prod.slug }}_{{ prod.id }}/"><img
+                                                    src="{% static 'img/placeholder.png' %}" class="lazyload"
+                                                    data-src="{{ im.url }}" alt="{{ prod.title }}"></a>
+                                        {% endthumbnail %}
+                                    </div>
+                                    <div class="goods__info">
+                                        <a class="goods__name"
+                                           onclick="tagManProductClickAjax({{ prod.id }}, 'Похожие товары', {{ forloop.counter }}, this.href); return !ga.loaded;"
+                                           href="/product/{{ prod.slug }}_{{ prod.id }}/">{{ prod.title }}</a>
+                                        <div class="goods__bot">
+                                            <form action="{% url 'basket:add' pk=prod.pk %}" method="post">
+                                                {% csrf_token %}
+                                                <input class="all_quantity" name="all_quantity" type="hidden"
+                                                       value="{{ prod.num_in_stock }}">
+                                                <input class="id_quantity" name="quantity" type="hidden" value="1">
+                                                <span class="goods__price">
+
+                                                    {% if product_discount %}
+                                                        <span class="goods__price-value"
+                                                              data-price="{{ prod.price_mrc|get_discount_price:product_discount.discount_value }}">{{ prod.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0|intcomma }}</span>
+                                                        <span class="goods__currency rouble">Р</span>
+                                                        <span class="goods__price-old">{{ prod.price_mrc|floatformat:0|intcomma }}</span>
+                                                    {% else %}
+                                                        <span class="goods__price-value"
+                                                              data-price="{{ prod.price_mrc }}">{{ prod.price_mrc|floatformat:0|intcomma }}</span>
+                                                        <span class="goods__currency rouble">Р</span>
+                                                    {% endif %}
+
+                                                </span>
+
+                                                {% if prod.num_in_stock > 0 and prod.num_in_stock > prod.num_allocated %}
+                                                    <span class="goods__stock  goods__stock_in">есть</span>
+                                                {% else %}
+                                                    <span class="goods__stock  goods__stock_out">нет</span>
+                                                {% endif %}
+                                                <button class="goods__buy  js-buy" type="submit" title="В корзину"
+                                                        data-goal="goSeen"><span class="buy-button">Купить</span></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% if prod.size_item_id %}
+                                        <div class="goods__variants">
+                                            <div class="goods__variants-name">Размеры в наличии</div>
+                                            <div class="goods__variants-list  js-products-sizes">
+                                                {% for size in prod.get_sizes_category %}
+                                                    <a href="/product/{{ prod.slug }}_{{ prod.id }}/#size_{{ size.1 }}"
+                                                       onclick="tagManProductClickAjax({{ prod.id }}, 'Похожие товары', {{ forloop.counter }}, this.href); return !ga.loaded;"
+                                                       class="goods__variants-item {% if prod.get_size_value == size.0 %}active{% endif %}"
+                                                       data-variant-id="{{ size.1 }}">{{ size.0 }}</a>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    <div class="goods__photos js-goods-photos js-products-item-gall">
+
+                                        <div class="slick-slide">
+
+                                            <div class="goods__photos-item  goods__photos-item_active"
+                                                 data-variant-id="{{ prod.pk }}">
+                                                {% thumbnail prod.main_image "95x95" as im %}
+                                                    <img onclick="tagManProductClickAjax({{ prod.id }}, 'Похожие товары', {{ forloop.counter }})"
+                                                         src="{% static 'img/placeholder.png' %}" class="lazyload"
+                                                         data-src="{{ im.url }}" alt="">
+                                                {% endthumbnail %}
+                                            </div>
+
+                                        </div>
+                                        {% for variant in all_history_variants %}
+                                            {% if prod.item_id == variant.item_id and prod.pk != variant.pk %}
+                                                <div class="slick-slide">
+                                                    <div class="goods__photos-item"
+                                                         data-variant-id="{{ variant.pk }}">
+                                                        {% thumbnail variant.main_image "95x95" as im %}
+                                                            <img onclick="tagManProductClickAjax({{ variant.pk }}, 'Похожие товары', {{ forloop.counter }})"
+                                                                 src="{% static 'img/placeholder.png' %}"
+                                                                 class="lazyload" data-src="{{ im.url }}" alt="">
+                                                        {% endthumbnail %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="goods__item-label">
+                                {% if product_discount %}
+                                    <span class="goods__item-label-discount">
+                                        {% with parse_time=product_discount.ending_time_discount %}
+                                            <span class="goods__item-label-discount-timer"><b
+                                                    class="color-pink">{{ parse_time.0 }} дн {{ parse_time.1 }}:{{ parse_time.2 }} мин</b> до конца акции</span>
+                                        {% endwith %}
+                                        <span class="goods__item-label-discount-val">%</span>
+                                    </span>
+                                {% endif %}
+                                {% if p.date_created|is_new %}
+                                    <i class="goods__item-label-new ico ico-new-small"></i>
+                                {% endif %}
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                    {% endwith %}
+
+                {% endfor %}
+            </div>
+        </div><!-- /swiper-container -->
+
+            <span class="products-carousel-prev  js-products-carousel-prev"></span>
+            <span class="products-carousel-next  js-products-carousel-next"></span>
+
+    </div><!-- /products-carousel -->
+</div>

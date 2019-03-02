@@ -1,0 +1,29 @@
+[
+  {
+    "model": "customer.User",
+    "pk": 2,
+    "fields": {
+      "email": "user-2@test.ru",
+      "first_name": "Иван",
+      "last_name": "Иванов",
+      "is_staff": false,
+      "is_active": true,
+      "phone": "664455",
+      "sub_news": false,
+    }
+  },
+  {
+    "model": "customer.User",
+    "pk": 3,
+    "fields": {
+      "email": "user-3@test.ru",
+      "first_name": "Петр",
+      "last_name": "Первый",
+      "is_staff": false,
+      "is_active": true,
+      "phone": "000000",
+      "sub_news": false,
+    }
+  },
+
+]

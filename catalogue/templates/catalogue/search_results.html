@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+{% load purchase_info_tags %}
+{% load basket_tags %}
+{% load humanize %}
+{% load range_filter %}
+{% load category_tags %}
+{% load common_tags %}
+{% block seo_block %}
+{% endblock %}
+{% block js_gtm %}
+    <script type="text/javascript">
+        (dataLayer = window.dataLayer || []).push({
+            'userCity': '{{ city_data }}',
+            'contentType': 'Страница поиска', // Тип контента страницы
+            'breadCrumbs': 'Главная / Результаты поиска' // Хлебные крошки
+        });
+    </script>
+{% endblock %}
+{% block counter_dynamic_appendix %}
+    <script type="text/javascript">
+    var _tmr = _tmr || [];
+    _tmr.push({
+        type: 'itemView',
+        productid: '',
+        pagetype: 'searchresults',
+        list: '1',
+        totalvalue: ''
+    });
+    </script>
+{% endblock %}
+{% block pixel_event %}
+    fbq('track', 'Search');
+{% endblock %}
+{% block content %}
+
+        <div class="container pagetype" data-pagetype="Страница поиска">
+            <div class="breadcrumbs">
+                <a href="/">Главная</a> / <span class="breadcrumbs-current">Результаты поиска</span>
+            </div>
+                <div class="n-category">
+                <div class="row">
+
+                <div class="col-md-9  col-md-push-3">
+
+                    <h1 class="text-center color-pink">Результаты поиска {% if search_phrase %}«{{ search_phrase }}»{% endif %}</h1>
+                    {% if products %}
+                    <div class="n-category__header">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h1 class="n-category__title">Найдено всего</h1>
+
+                                <span class="n-category__goods-count"><b
+                                        class="n-category__goods-count-val">{{ count_products }}</b> товаров</span>
+                            </div>
+                            <div class="col-md-4">
+
+                                {% include 'partials/sort.html' %}
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if products %}
+                    <div class="category-filter  new-filter  hidden-sm  hidden-xs">
+                        {% include 'catalogue/partials/options_ajax_filter_brand_search.html' with page='search_page' %}
+                    </div>
+                    <div class="category-mobile-btns  visible-sm  visible-xs">
+                        <button class="btn  btn-sm  js-open-mobile-sorting type=" type="button">Сортировка</button>
+                        <button class="btn  btn-sm  js-open-mobile-filter" type="button">Фильтр</button>
+                    </div>
+                    {% endif %}
+                    <div id="productList" data-attributes-order="" data-selected-attr-filter=""
+                         data-current-filter-attr="" data-search-phrase="{{ search_phrase }}">
+                        {% if products %}
+
+                            {% if stock_yes %}
+                                <div class="goods" data-page-type="Страница поиска">
+                                    <div class="row">
+                                        {% for p in products %}
+                                            {% if p.num_in_stock > 0 and p.num_in_stock > p.num_allocated %}
+                                                {% include 'catalogue/partials/product_card_stock.html' with page_type='Страница поиска' counter=forloop.counter %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if unstock_yes %}
+                                <div class="goods goods_outofstock {% if not stock_yes %} goods_outofstock-another {% endif %}" data-page-type="Страница поиска" >
+                                    <div class="row">
+                                        {% for p in products %}
+                                            {% if p.num_in_stock == 0 or p.num_in_stock == p.num_allocated %}
+                                               {% include 'catalogue/partials/product_card_unstock.html' with page_type='Страница поиска' counter=forloop.counter %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="container" style="margin-bottom: 30px;">
+                                    <div class="wysiwyg_content">
+                                        <div class="row">
+                                            <div class="col-sm-8 col-sm-offset-2  text-center">
+                                                {% if search_phrase_empty %}
+                                                    <p>Задан пустой поисковый запрос.</p>
+                                                {% else %}
+                                                <p>По Вашему запросу ничего не найдено.</p>
+                                                <p>Попробуйте изменить запрос или воспользуйтесь нашим каталогом.</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                        {% endif %}
+
+                      {% if products.paginator.num_pages > 1 %}
+
+                                <div class="row" id="showMoreProducts">
+                                    <div class="col-sm-6  col-sm-offset-3  col-xs-10  col-xs-offset-1">
+                                        <button data-category="{{ categories_ids }}" data-current-page="2"
+                                                id="showMoreProductsList" class="btn  btn-blue  btn-block  btn-large"
+                                                type="button">Показать ещё
+                                        </button>
+                                    </div>
+                                </div>
+
+                            <div class="n-category-footer  row">
+                                <div class="col-md-8">
+                                    <div class="n-category__paginator paginator">
+                                        {% if products.has_previous %}
+                                            {% if  products.previous_page_number == 1 %}
+                                                <a class="paginator-prev" href="{{ current_path|without_query }}"></a>
+                                            {% else %}
+                                                <a class="paginator-prev"
+                                                   href="?{% query_transform request page=products.previous_page_number %}"
+                                                   data-current-page="{{ products.previous_page_number }}"></a>
+                                            {% endif %}
+                                        {% endif %}
+
+
+                                        {% for i in products.number|modify_range:products.paginator.num_pages %}
+                                            {% ifequal i products.number %}
+                                                <a class="active">{{ i }}</a>
+                                            {% else %}
+                                                {% if i == 1 %}
+                                                    <a href="{{ current_path|without_query }}">{{ i }}</a>
+                                                {% else %}
+                                                    <a href="?{% query_transform request page=i %}"
+                                                       data-current-page="{{ i }}">{{ i }}</a>
+                                                {% endif %}
+                                            {% endifequal %}
+                                        {% endfor %}
+
+                                        {% if products.number|end_modify_range:products.paginator.num_pages < products.paginator.num_pages %}
+                                            {% with res_modify_pages=products.number|end_modify_range:products.paginator.num_pages %}
+                                                {% with result_sub=products.paginator.num_pages|minus:res_modify_pages %}
+                                                    {% if result_sub > 1 %}...{% endif %}
+                                                {% endwith %}
+                                            {% endwith %}
+                                            <a href="?{% query_transform request page=products.paginator.num_pages %}"
+                                               data-current-page="{{ products.paginator.num_pages }}"
+                                                    {% ifequal products.paginator.num_pages products.number %}
+                                               class="active" {% endifequal %}>{{ products.paginator.num_pages }}</a>
+                                        {% endif %}
+                                        {% if products.has_next %}
+                                            {% comment %}<a href="">...</a>{% endcomment %}
+                                            <a class="paginator-next"
+                                               href="?{% query_transform request page=products.next_page_number %}"
+                                               data-current-page="{{ products.next_page_number }}"></a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="goods-perpage">
+                                        Выводить по:
+                                        <span data-page-size="30"
+                                              class="goods-perpage__item  goods-perpage__item_current">30</span>
+                                        <span data-page-size="60" class="goods-perpage__item">60</span>
+                                        <span data-page-size="90" class="goods-perpage__item">90</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-md-pull-9  hidden-sm  hidden-xs">
+                    <div class="categories">
+                        <div class="categories__root-name">{{ search_phrase }}</div>
+                        <ul class="categories__list  js-categories">
+                            {% for cat in categories %}
+                                <li class="categories__list-item {% if category.id == cat.id %} categories__list-item_open{% endif %}">
+                                        <span class="categories__list-item-name"
+                                              data-category-id="{{ cat.id }}" data-search_phrase="{{ search_phrase }}">{{ cat }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                </div>
+                </div>
+
+        </div>
+
+        <div class="container">
+            <div class="helpback">
+                <p>
+                    <span class="color-pink">Не нашли то, что искали?</span> <i class="ico ico-pen"></i> <a
+                        class="js-fancy color-blue" href="#feedback">Свяжитесь с нами</a>
+                </p>
+            </div>
+        </div>
+        {% include 'partials/filter_mobile.html' with categories_filter=categories category=category min_price=min_price max_price=max_price  %}
+        {% include 'partials/sort_mobile.html' %}
+{% endblock %}

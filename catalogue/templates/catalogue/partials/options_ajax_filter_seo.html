@@ -1,0 +1,269 @@
+{% load thumbnail %}
+{% load purchase_info_tags %}
+{% load basket_tags %}
+{% load humanize %}
+{% load range_filter %}
+{% load category_tags %}
+{% load common_tags %}
+
+
+<form id="filter-form" name="filter-form" class="n-filter  js-new-filter" data-attribute-codes="{% for attr in category.attributes.all %}{% if attr.is_option %}{{ attr.code }},{% endif %}{% endfor %}">
+    <input type="hidden" name="category" id="categoryInputId" value="{{ category.id }}">
+    <input type="hidden" name="sort" id="sortInputVal" value="">
+    <input type="hidden" name="page" id="pageInputVal" value="1">
+    <input type="hidden" name="pagesize" id="pageSizeInputVal" value="30">
+    <input type="hidden" name="attr-orders" id="attributeOrders" value="">
+
+    <div class="n-filter__section">
+        <div class="n-filter__item">
+            <div class="n-filter__item-name">Цена</div>
+            <div class="n-filter__item-drop">
+                <div class="n-filter__item-params  n-filter__item-params_slider  range-slider">
+                    <div class="range-slider__slider  range-slider__slider_price  js-filter-slider"
+                         data-id="price"
+                         data-name="Цена"
+                         data-minval="0"
+                         data-maxval="{{ max_price_slider|floatformat:0 }}"></div>
+                    <div class="range-slider__fields">
+                        <input class="range-slider__input  range-slider__input_min" type="text"
+                               name="price-slider-min"
+                               data-slider-min="0"
+                               value="0">
+                        <input class="range-slider__input  range-slider__input_max" type="text"
+                               name="price-slider-max"
+                               data-slider-max="{{ max_price_slider|floatformat:0 }}"
+                               value="{{ max_price_slider|floatformat:0 }}">
+                    </div>
+                </div>
+                <div class="n-filter__item-footer">
+                    <button class="n-filter__item-apply  js-apply-filter" type="submit">Применить</button>
+                    <button class="n-filter__item-reset  js-filter-reset-item  js-filter-reset-slider  hidden" data-id="price">Очистить</button>
+                </div>
+            </div>
+        </div>
+
+        {% for attr in show_attributes %}
+            {% if forloop.counter < 5 %}
+                {% if attr.is_option %}
+                    {% with yes_options=filter_result|get_item_int:attr.id %}
+                        {% if yes_options %}
+                            <div data-attr-id="{{ attr.id }}" class="n-filter__item  n-filter__item_{{ attr.code }}  n-filter__item_{{ attr.id }} {{ attr.code }} ">
+                                <div class="n-filter__item-name">{{ attr.name_show }} <span class="checked-star"></span></div>
+                                <div class="n-filter__item-drop">
+                                    {% if attr.code == 'color1' %}
+                                        <div class="n-filter__item-variants  n-filter__item-variants_colors  colors-list">
+                                            {% for opt in attr.option_group.color_options %}
+                                                {% if opt.id in yes_options %}
+                                                    <label class="colors-list__item" title="{{ opt }}">
+                                                        <input class="control-color-pseudo" type="checkbox" {% if seo_attributes|get_item:attr.code == opt.option %} checked {% endif %} data-this-id="{{ opt.id }}" data-this-code="{{ attr.code }}" data-type="color" data-color-code="{{ opt.color_code }}" name="{{ attr.code }}" value="{{ opt.id }}">
+                                                        <span class="colors-list__item-color n-filter__color_{{ opt.color_code }}"></span>
+                                                    </label>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% elif attr.code == 'size' %}
+                                        {% if  yes_options|count_len_options > 13 %}
+                                            <div class="n-filter__search">
+                                                <input class="n-filter__search-text" type="text" placeholder="Найти {{ attr.name_show|lower }}">
+                                            </div>
+                                        {% endif %}
+                                        <div class="n-filter__item-variants  n-filter__item-variants_scroll  js-scrollbar">
+
+                                            {% for opt in attr.option_group.size_options_order %}
+                                                {% if opt.id in yes_options %}
+                                                    <label class="n-filter__variants-item" data-name="{{ opt }}">
+                                                        <input class="pseudo-control" type="checkbox" {% if seo_attributes|get_item:attr.code == opt.option %} checked {% endif %} data-this-id="{{ opt.id }}" data-this-code="{{ attr.code }}" data-type="checkbox" name="{{ attr.code }}" value="{{ opt.id }}">
+                                                        <i class="pseudo-control-checkbox"></i>
+                                                        <span class="n-filter__variants-item-name">{{ opt.show_value }}</span>
+                                                    </label>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+
+                                        {% if  yes_options|count_len_options > 13 %}
+                                            <div class="n-filter__search">
+                                                <input class="n-filter__search-text" type="text" placeholder="Найти {{ attr.name_show|lower }}">
+                                            </div>
+                                        {% endif %}
+                                        <div class="n-filter__item-variants  n-filter__item-variants_scroll  js-scrollbar">
+                                            {% for opt in attr.option_group.options.all %}
+                                                {% if opt.id in yes_options %}
+                                                    <label class="n-filter__variants-item" data-name="{% if attr.code == 'age_from' or attr.code == 'age_to' %}{{ opt.option|month_to_year }}{% else %}{{ opt }}{% endif %}">
+                                                        <input class="pseudo-control" type="checkbox" {% if seo_attributes|get_item:attr.code == opt.option %} checked {% endif %} data-this-id="{{ opt.id }}" data-this-code="{{ attr.code }}" data-type="checkbox" name="{{ attr.code }}" value="{{ opt.id }}">
+                                                        <i class="pseudo-control-checkbox"></i>
+                                                        <span class="n-filter__variants-item-name">
+                                                            {% if attr.code == 'age_from' or attr.code == 'age_to' %}
+                                                                {{ opt.option|month_to_year }}
+                                                            {% else %}
+                                                                {{ opt.show_value }}
+                                                            {% endif %}
+                                                        </span>
+                                                    </label>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="n-filter__item-footer">
+                                        <button class="n-filter__item-apply  js-apply-filter" type="submit">Применить</button>
+                                        <button class="n-filter__item-reset  js-filter-reset-item  hidden" data-id="{{ attr.code }}">Очистить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    {% with yes_options=filter_float_result|get_item_int:attr.id %}
+                        {% if yes_options %}
+                            <div data-attr-type="slider" data-attr-id="{{ attr.id }}" class="n-filter__item  n-filter__item_{{ attr.code }}  n-filter__item_{{ attr.id }} {{ attr.code }} ">
+                                <div class="n-filter__item-name">{{ attr.name_show }}</div>
+                                <div class="n-filter__item-drop">
+                                    <div class="n-filter__item-params  n-filter__item-params_slider  range-slider">
+                                        <div class="range-slider__slider  range-slider__slider_{{ attr.code }}  js-filter-slider"
+                                             data-id="{{ attr.code }}"
+                                             data-name="{{ attr }}"
+                                             data-minval="{{ yes_options.0|make_min_val }}"
+                                             data-maxval="{{ yes_options.1|make_max_val }}"></div>
+                                        <div class="range-slider__fields">
+                                            <input class="range-slider__input  range-slider__input_min" type="text"
+                                                   name="{{ attr.code }}-slider-min"
+                                                   data-slider-min="{{ yes_options.0|make_min_val }}"
+                                                   value="{{ yes_options.0|make_min_val }}">
+                                            <input class="range-slider__input  range-slider__input_max" type="text"
+                                                   name="{{ attr.code }}-slider-max"
+                                                   data-slider-max="{{ yes_options.1|make_max_val }}"
+                                                   value="{{ yes_options.1|make_max_val }}">
+                                        </div>
+                                    </div>
+                                    <div class="n-filter__item-footer">
+                                        <button class="n-filter__item-apply  js-apply-filter" type="submit">Применить</button>
+                                        <button class="n-filter__item-reset  js-filter-reset-item  js-filter-reset-slider  hidden" data-id="{{ attr.code }}">Очистить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% if show_attributes|length > 5 %}
+        <button class="n-filter__show-advanced  js-filter-show-advanced" type="button">Расширенные <br>характеристики</button>
+        {% endif %}
+    </div>
+        <div class="n-filter__section  n-filter__section_advanced  hidden">
+        {% for attr in show_attributes %}
+            {% if forloop.counter > 4 %}
+                {% if forloop.counter == 11 or forloop.counter > 12 and forloop.counter|add:1|divisibleby:6 %}
+                    </div><div class="n-filter__section  n-filter__section_advanced  hidden">
+                {% endif %}
+
+                {% if attr.is_option %}
+                    {% with yes_options=filter_result|get_item_int:attr.id %}
+                        {% if yes_options %}
+                            <div data-attr-id="{{ attr.id }}" class="n-filter__item  n-filter__item_{{ attr.code }}  n-filter__item_{{ attr.id }} {{ attr.code }} ">
+                                <div class="n-filter__item-name">{{ attr.name_show }}</div>
+                                <div class="n-filter__item-drop">
+                                    {% if attr.code == 'color1' %}
+                                        <div class="n-filter__item-variants  n-filter__item-variants_colors  colors-list">
+                                            {% for opt in attr.option_group.color_options %}
+                                                {% if opt.id in yes_options %}
+                                                    <label class="colors-list__item" title="{{ opt }}" data-name="{{ opt }}">
+                                                        <input class="control-color-pseudo" type="checkbox" {% if seo_attributes|get_item:attr.code == opt.option %} checked {% endif %} data-this-id="{{ opt.id }}" data-this-code="{{ attr.code }}" data-type="color" name="{{ attr.code }}" value="{{ opt.id }}">
+                                                        <span class="colors-list__item-color colors-list__item-color_{{ opt.color_code }}"></span>
+                                                    </label>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% elif attr.code == 'size' %}
+                                        {% if  yes_options|count_len_options > 13 %}
+                                            <div class="n-filter__search">
+                                                <input class="n-filter__search-text" type="text" placeholder="Найти {{ attr.name_show|lower }}">
+                                            </div>
+                                        {% endif %}
+                                        <div class="n-filter__item-variants  n-filter__item-variants_scroll  js-scrollbar">
+
+                                            {% for opt in attr.option_group.size_options_order %}
+                                                {% if opt.id in yes_options %}
+                                                    <label class="n-filter__variants-item" data-name="{{ opt }}">
+                                                        <input class="pseudo-control" type="checkbox" {% if seo_attributes|get_item:attr.code == opt.option %} checked {% endif %} data-this-id="{{ opt.id }}" data-this-code="{{ attr.code }}" data-type="checkbox" name="{{ attr.code }}" value="{{ opt.id }}">
+                                                        <i class="pseudo-control-checkbox"></i>
+                                                        <span class="n-filter__variants-item-name">{{ opt.show_value }}</span>
+                                                    </label>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {% if  yes_options|count_len_options > 13 %}
+                                            <div class="n-filter__search">
+                                                <input class="n-filter__search-text" type="text" placeholder="Найти {{ attr.name_show|lower }}">
+                                            </div>
+                                        {% endif %}
+                                        <div class="n-filter__item-variants  n-filter__item-variants_scroll  js-scrollbar">
+
+                                            {% for opt in attr.option_group.options.all %}
+
+                                                {% if opt.id in yes_options %}
+                                                    <label class="n-filter__variants-item" data-name="{% if attr.code == 'age_from' or attr.code == 'age_to' %}{{ opt.option|month_to_year }}{% else %}{{ opt }}{% endif %}">
+                                                        <input class="pseudo-control" type="checkbox" {% if seo_attributes|get_item:attr.code == opt.option %} checked {% endif %} data-this-id="{{ opt.id }}" data-this-code="{{ attr.code }}" data-type="checkbox" name="{{ attr.code }}" value="{{ opt.id }}">
+                                                        <i class="pseudo-control-checkbox"></i>
+                                                        <span class="n-filter__variants-item-name">
+                                                            {% if attr.code == 'age_from' or attr.code == 'age_to' %}
+                                                                {{ opt.option|month_to_year }}
+                                                            {% else %}
+                                                                {{ opt.show_value }}
+                                                            {% endif %}
+                                                        </span>
+                                                    </label>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="n-filter__item-footer">
+                                        <button class="n-filter__item-apply  js-apply-filter" type="submit">Применить</button>
+                                        <button class="n-filter__item-reset  js-filter-reset-item  hidden" data-id="{{ attr.code }}">Очистить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    {% with yes_options=filter_float_result|get_item_int:attr.id %}
+                        {% if yes_options %}
+                            <div data-attr-type="slider" data-attr-id="{{ attr.id }}" class="n-filter__item  n-filter__item_{{ attr.code }}  n-filter__item_{{ attr.id }} {{ attr.code }} ">
+                                <div class="n-filter__item-name">{{ attr.name_show }}</div>
+                                <div class="n-filter__item-drop">
+                                    <div class="n-filter__item-params  n-filter__item-params_slider  range-slider">
+                                        <div class="range-slider__slider  range-slider__slider_{{ attr.code }}  js-filter-slider"
+                                             data-id="{{ attr.code }}"
+                                             data-name="{{ attr }}"
+                                             data-minval="{{ yes_options.0|make_min_val}}"
+                                             data-maxval="{{ yes_options.1|make_max_val }}"></div>
+                                        <div class="range-slider__fields">
+                                            <input class="range-slider__input  range-slider__input_min" type="text"
+                                                   name="{{ attr.code }}-slider-min"
+                                                   value="{{ yes_options.0|make_min_val }}">
+                                            <input class="range-slider__input  range-slider__input_max" type="text"
+                                                   name="{{ attr.code }}-slider-max"
+                                                   value="{{ yes_options.1|make_max_val }}">
+                                        </div>
+                                    </div>
+                                    <div class="n-filter__item-footer">
+                                        <button class="n-filter__item-apply  js-apply-filter" type="submit">Применить</button>
+                                        <button class="n-filter__item-reset  js-filter-reset-item  js-filter-reset-slider  hidden" data-id="{{ attr.code }}">Очистить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+            {% endif %}
+
+        {% endfor %}
+        </div>
+
+    <div class="n-filter__selected  hidden">
+        <span class="n-filter__selected-title">Выбрано:</span>
+        <div class="n-filter__selected-list"></div>
+        <button class="n-filter__reset  js-filter-reset-all" type="button">Очистить</button>
+    </div>
+</form>

@@ -1,0 +1,284 @@
+{% load thumbnail %}
+{% load purchase_info_tags %}
+{% load basket_tags %}
+{% load humanize %}
+{% load range_filter %}
+{% load category_tags %}
+{% load staticfiles %}
+{% load common_tags %}
+{% load product_tags %}
+<div class="goods goods_yesstock"
+     data-page-type="Список товаров"
+     data-filter-options="{{ filter_options }}"
+     data-filter-float-options="{{ filter_float_options }}"
+     data-count-products="{{ count_products }}"
+     data-filter-last-options="{{ filter_last_options }}">
+    {% if products %}
+        <div class="row filter_products" data-page-type="Список товаров">
+            {% for p in products %}
+                {% if p.num_in_stock > 0 and p.num_in_stock > p.num_allocated %}
+                    {% get_discount_for_product_new id=p.id is_discount=p.is_discount as product_discount %}
+                        <div class="col-md-4  col-sm-6">
+                            <div class="goods__item" data-id="{{ p.id }}" data-name="{{ p.title }}" data-artikul="{{ p.artikul }}" data-position="{{ forloop.counter }}"
+                                data-price="{% if product_discount %}{{ p.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0 }}{% else %}{{ p.price_mrc|floatformat:0 }}{% endif %}"
+                                data-brand-name="{{ p.brand_name }}" data-category-name="{{ p.category_name }}" data-variant-name="{{ p.variant_name }}">
+                                <div class="goods__item-in">
+                                    <div class="goods__img">
+                                        {% thumbnail p.main_image "261x261" as im %}
+                                            <a href="{% url 'catalogue:detail' p.slug p.pk %}"
+                                            onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }}, this.href); return !ga.loaded;"><img
+                                                    src="{% static 'img/placeholder.png' %}" data-src="{{ im.url }}"
+                                                    class="lazyload" alt="{{ p.title }}"></a>
+                                        {% endthumbnail %}
+
+                                    </div>
+                                    <div class="goods__info">
+                                        <a class="goods__name"
+                                           href="{% url 'catalogue:detail' p.slug p.pk %}"
+                                           onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }}, this.href); return !ga.loaded;">{{ p.title }}</a>
+                                        <div class="goods__bot">
+                                            <form action="{% url 'basket:add' pk=p.id %}" method="post">
+                                                {% csrf_token %}
+                                                <input class="all_quantity" name="all_quantity" type="hidden" value="{{ p.num_in_stock }}">
+                                                <input class="id_quantity" name="quantity"
+                                                       type="hidden" value="1">
+                                                <span class="goods__price">
+                                                {% if product_discount %}
+                                                    <span class="goods__price-value"
+                                                          data-price="{{ p.price_mrc|get_discount_price:product_discount.discount_value }}">{{ p.price_mrc|get_discount_price:product_discount.discount_value|floatformat:0|intcomma }}</span>
+                                                    <span class="goods__currency rouble">Р</span>
+                                                    <span class="goods__price-old">{{ p.price_mrc|floatformat:0|intcomma }}</span>
+                                                {% else %}
+                                                    <span class="goods__price-value"
+                                                          data-price="{{ p.price_mrc }}">{{ p.price_mrc|floatformat:0|intcomma }}</span>
+                                                    <span class="goods__currency rouble">Р</span>
+                                                {% endif %}
+                                            </span>
+                                                <span class="goods__stock  goods__stock_in">есть</span>
+                                                <button class="goods__buy js-buy {{ data.class_button }}" type="submit"
+                                                        title="В корзину" data-stock="in"><span class="buy-button">Купить</span></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% if p.size_item_id %}
+                                        <div class="goods__variants">
+                                            <div class="goods__variants-name">Размеры в наличии</div>
+                                            <div class="goods__variants-list">
+                                                {% for size in p.get_sizes_category %}
+                                                    <a href="{% url 'catalogue:detail' p.slug p.pk %}#size_{{ size.1 }}"
+                                                       onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }}, this.href); return !ga.loaded;"
+                                                       class="goods__variants-item {% if p.get_size_value == size.0 %}active{% endif %}"
+                                                       data-variant-id="{{ size.1 }}">{{ size.0 }}</a>{% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="goods__photos js-goods-photos js-products-item-gall">
+                                        <div class="slick-slide">
+                                            <div class="goods__photos-item  goods__photos-item_active"
+                                                 data-variant-id="{{ p.id }}">
+                                                {% thumbnail p.main_image "95x95" as im %}
+                                                    <img src="{% static 'img/placeholder.png' %}"
+                                                         onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }})"
+                                                         data-src="{{ im.url }}" class="lazyload">
+                                                {% endthumbnail %}
+                                            </div>
+                                        </div>
+                                        {% for variant in all_variants %}
+                                            {% if p.item_id == variant.item_id and p.pk != variant.pk %}
+                                                <div class="slick-slide">
+                                                    <div class="goods__photos-item" data-variant-id="{{ variant.pk }}">
+                                                        {% thumbnail variant.main_image "95x95" as im %}
+                                                            <img src="{% static 'img/placeholder.png' %}"
+                                                                 onclick="tagManProductClickAjax({{ variant.pk }}, 'Список товаров', {{ forloop.counter }})"
+                                                                 data-src="{{ im.url }}" class="lazyload">
+                                                        {% endthumbnail %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="goods__item-label">
+                                    {% if product_discount %}
+                                        <span class="goods__item-label-discount">
+                                    {% with parse_time=product_discount.ending_time_discount %}
+                                        <span class="goods__item-label-discount-timer"><b
+                                                class="color-pink">{{ parse_time.0 }} дн {{ parse_time.1 }}:{{ parse_time.2 }} мин</b> до конца акции</span>
+                                    {% endwith %}
+                                            <span class="goods__item-label-discount-val">%</span>
+                                    </span>
+                                    {% endif %}
+                                    {% if p.date_created|is_new %}
+                                        <i class="goods__item-label-new ico ico-new-small"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="wysiwyg_content">
+            <div class="row">
+                <div class="col-sm-8 col-sm-offset-2  text-center">
+                    <p>По выбранным фильтрам товаров не найдено</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+
+{% if unstock_yes %}
+    <div class="goods goods_outofstock {% if not stock_yes %} goods_outofstock-another {% endif %}"
+         data-page-type="Список товаров">
+        <div class="row">
+            {% for p in products %}
+                {% if p.num_in_stock == 0 or p.num_in_stock == p.num_allocated %}
+                    <div class="col-md-4  col-sm-6">
+                        <div class="goods__item" data-id="{{ p.id }}" data-name="{{ p.title }}" data-artikul="{{ p.artikul }}" data-position="{{ forloop.counter }}"
+                            data-price="{{ p.price_mrc|floatformat:0 }}"
+                            data-brand-name="{{ p.brand_name }}" data-category-name="{{ p.category_name }}" data-variant-name="{{ p.variant_name }}">
+                            <div class="goods__item-in">
+                                <div class="goods__img">
+                                    {% thumbnail p.main_image "261x261" as im %}
+                                        <a href="{% url 'catalogue:detail' p.slug p.pk %}"
+                                        onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }}, this.href); return !ga.loaded;"><img
+                                                src="{% static 'img/placeholder.png' %}" data-src="{{ im.url }}"
+                                                alt="{{ p.title }}" class="lazyload"></a>
+                                    {% endthumbnail %}
+
+                                </div>
+                                <div class="goods__info">
+                                    <a class="goods__name"
+                                       onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }}, this.href); return !ga.loaded;"
+                                       href="{% url 'catalogue:detail' p.slug p.pk %}">{{ p.title }}</a>
+                                    <div class="goods__bot">
+                                        <form action="{% url 'basket:add' pk=p.id %}" method="post">
+                                            {% csrf_token %}
+                                            <input class="all_quantity" name="all_quantity" type="hidden" value="{{ p.num_in_stock }}">
+                                            <input class="id_quantity" name="quantity" type="hidden" value="1">
+                                            <span class="goods__price">
+                                                    <span class="goods__price-value">{{ p.price_mrc|floatformat:0|intcomma }}</span>
+                                                    <span class="goods__currency rouble">Р</span>
+                                            </span>
+                                            <span class="goods__stock  goods__stock_out">нет</span>
+                                            <button class="goods__buy js-buy {{ data.class_button }}" type="submit"
+                                                    title="В корзину" data-stock="in"><span class="buy-button">Купить</span></button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% if p.size_item_id %}
+                                    <div class="goods__variants">
+                                        <div class="goods__variants-name">Размеры в наличии</div>
+                                        <div class="goods__variants-list">
+                                            {% for size in p.get_sizes_category %}
+                                                <a href="{% url 'catalogue:detail' p.slug p.pk %}#size_{{ size.1 }}"
+                                                   onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }}, this.href); return !ga.loaded;"
+                                                   class="goods__variants-item {% if p.get_size_value == size.0 %}active{% endif %}"
+                                                   data-variant-id="{{ size.1 }}">{{ size.0 }}</a>{% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="goods__photos js-goods-photos js-products-item-gall">
+                                    <div class="slick-slide">
+
+                                        <div class="goods__photos-item  goods__photos-item_active"
+                                             data-variant-id="{{ p.id }}">
+                                            {% thumbnail p.main_image "95x95" as im %}
+                                                <img src="{% static 'img/placeholder.png' %}" data-src="{{ im.url }}"
+                                                     onclick="tagManProductClickAjax({{ p.id }}, 'Список товаров', {{ forloop.counter }})"
+                                                     class="lazyload">
+                                            {% endthumbnail %}
+                                        </div>
+
+                                    </div>
+                                    {% for variant in all_variants %}
+                                        {% if p.item_id == variant.item_id and p.pk != variant.pk %}
+                                            <div class="slick-slide">
+                                                <div class="goods__photos-item" data-variant-id="{{ variant.pk }}">
+                                                    {% thumbnail variant.main_image "95x95" as im %}
+                                                        <img src="{% static 'img/placeholder.png' %}"
+                                                             onclick="tagManProductClickAjax({{ variant.pk }}, 'Список товаров', {{ forloop.counter }})"
+                                                             data-src="{{ im.url }}" class="lazyload">
+                                                    {% endthumbnail %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if p.date_created|is_new %}
+                                <i class="products-item-new  ico ico-new-small"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{% if products.has_next %}
+    <div class="row" id="showMoreProducts">
+        <div class="col-sm-6  col-sm-offset-3  col-xs-10  col-xs-offset-1">
+            <button data-category="{{ categories_raw }}" data-current-page="{{ products.next_page_number }}"
+                    id="showMoreProductsList" class="btn  btn-blue  btn-block  btn-large"
+                    type="button">Показать ещё
+            </button>
+        </div>
+    </div>
+{% endif %}
+
+<div class="n-category-footer  row">
+    <div class="col-md-8">
+        {% if paginator.num_pages > 1 %}
+            <div id="paginator-space" class="n-category__paginator paginator filter"
+                 data-active-page="{{ products.number }}">
+                {% if products.has_previous %}
+                    <a class="paginator-prev" data-current-page="{{ products.previous_page_number }}"></a>
+                {% endif %}
+                {% if products.number > 3 %}
+                    <a class="paginator-ajax" data-current-page="1">1</a>
+                    ...
+                {% endif %}
+
+                {% for i in products.number|modify_range:products.paginator.num_pages %}
+                    {% if products.number == i %}
+                        <a class="active">{{ i }}</a>
+                    {% else %}
+                        <a class="paginator-ajax" data-current-page="{{ i }}">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if products.number|end_modify_range:products.paginator.num_pages < paginator.num_pages %}
+                    {% with res_modify_pages=products.number|end_modify_range:products.paginator.num_pages %}
+                        {% with result_sub=products.paginator.num_pages|minus:res_modify_pages %}
+                            {% if result_sub > 1 %}...{% endif %}
+                        {% endwith %}
+                    {% endwith %}
+                    <a href="?{% query_transform request page=paginator.num_pages %}"
+                       data-current-page="{{ paginator.num_pages }}"
+                            {% ifequal paginator.num_pages products.number %}
+                       class='active' {% endifequal %}>{{ paginator.num_pages }}</a>
+                {% endif %}
+                {% if products.has_next %}
+                    <a class="paginator-next" data-current-page="{{ products.next_page_number }}"></a>
+                {% endif %}
+
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <div class="goods-perpage">
+            Выводить по:
+            <span data-page-size="30"
+                  class="goods-perpage__item  {% if page_size|to_int == 30 %} goods-perpage__item_current {% endif %}">30</span>
+            <span data-page-size="60"
+                  class="goods-perpage__item {% if page_size|to_int == 60 %} goods-perpage__item_current {% endif %}">60</span>
+            <span data-page-size="90"
+                  class="goods-perpage__item {% if page_size|to_int == 90 %} goods-perpage__item_current {% endif %}">90</span>
+        </div>
+    </div>
+</div>

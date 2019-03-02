@@ -1,0 +1,187 @@
+{% load common_tags %}
+{% with product.reviews.approved.all as reviews_approved %}
+<h2 class="tabs-content-title">Отзывы / <span class="color-blue">{{ reviews_approved|length }}</span>
+    <button class="js-fancy  add_review_btn  btn  btn-white  btn-md" data-fancybox-href="#addreview_form"
+            type="button">Оставить отзыв
+    </button>
+</h2>
+
+<div class="reviews">
+    {% if reviews_approved|length == 0 %} <p>В данный момент ещё нет отзывов. Будьте первыми!</p> {% endif %}
+    {% for review in product.reviews.approved.all %}
+        <div class="reviews-item">
+        <div class="row">
+            <div class="col-md-3  col-sm-12">
+                <div class="row">
+                    <div class="col-md-12  col-sm-3">
+                        <div class="reviews-item-author"><b>Автор</b>: <span class="color-blue">{{ review.reviewer_name }}</span>
+                        </div>
+                        <div class="reviews-item-author"><b>Возраст ребенка</b>: {{ review.age_child }}</div>
+                        <div class="reviews-item-date">{{ review.date_created }}</div>
+                    </div>
+                    <div class="col-md-12 col-sm-4">
+                        <div class="reviews-item-author">
+                            <b>Качество изготовления:</b>
+                            <div class="reviews-item-rating-stars">
+                                {% for c in 1|range:6 %}
+                                    {% if c <= review.workmanship_score %}
+                                        <i class="ico ico-star-color"></i>
+                                    {% else %}
+                                        <i class="ico ico-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-sm-4">
+                        <div class="reviews-item-author">
+                            <b>Удобство экспуатации:</b>
+                            <div class="reviews-item-rating-stars">
+                                {% for c in 1|range:6 %}
+                                    {% if c <= review.service_ability_score %}
+                                        <i class="ico ico-star-color"></i>
+                                    {% else %}
+                                        <i class="ico ico-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9  col-sm-12">
+                <p class="reviews-text-item">
+                    <b><i class="ico ico-smile"></i> Впечатления:</b>
+                    {{ review.impression  }}
+                </p>
+                <p class="reviews-text-item">
+                    <b><i class="ico ico-cplus"></i> Достоинства:</b>
+                    {{ review.dignity }}
+                </p>
+                <p class="reviews-text-item">
+                    <b><i class="ico ico-cminus"></i> Недостатки:</b>
+                    {{ review.limitations }}
+                </p>
+                <p class="reviews-text-item">
+                    <b><i class="ico ico-ccomment"></i> Комментарий:</b>
+                    {{ review.body }}
+                </p>
+                <div class="reviews-comments">
+                    <h3 class="reviews-comments-title">Комментарии / <span class="color-blue">{{ review.comments.count }}</span></h3>
+                    <div class="reviews-comments-items">
+                        {% for r_comment in review.comments.all %}
+                            <div class="reviews-comments-item">
+                            <div class="reviews-comments-info">
+                                            <span class="reviews-comments-info-item"><b>Автор:</b>
+                                                <span class="color-blue">{{ r_comment.reviewer_name }}</span>
+                                            </span>
+                                <!-- <span class="reviews-comments-info-item"><b>Дети:</b>  5-6 лет</span> -->
+                                <span class="reviews-comments-info-item">{{ r_comment.date_created }}</span>
+                            </div>
+                            <div class="reviews-comments-text">{{ r_comment.body }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if request.user.is_authenticated %}
+                        <form class="reviews-comments-form" id="review-comment-form" action="{% url 'catalogue:add-comment' product_slug=product.slug product_pk=product.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="{{ form_comment.review.html_name }}" value="{{ review.pk }}">
+                            <textarea name="{{ form_comment.body.html_name }}" placeholder="Ваш комментарий"></textarea>
+                            <button class="btn  btn-xs" type="submit">Отправить</button>
+                        </form>
+
+                        <div class="reviews-commentbtn">
+                            <button class="js-show-comment-form  btn  btn-xs  btn-grey" type="button">
+                                Комментировать
+                            </button>
+                        </div>
+                    {% else %}
+                        <div>Вы не можете оставить комментарий к данному отзыву. <a href="#login" class="js-fancy">Войдите</a> или <a href="/accounts/register/" target="_blank">зарегистрируйтесь</a></div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{#<div class="text-center">#}
+{#    <a class="btn btn-white" href="">Посмотреть все отзывы</a>#}
+{#</div>#}
+
+{% endwith %}
+<div class="hidden">
+    <div id="addreview_form">
+        <div class="addreview_form">
+            <h3 class="addreview_form-title"><span class="color-blue">Поделитесь</span> <span
+                    class="color-pink">своими впечатлениями</span></h3>
+            {% if request.user.is_authenticated %}
+                <div class="addreview_form-text">
+                    <p>Знаем, что заполнять много <span class="color-blue">😥</span>, но этим вы поможете другим
+                        покупателям определиться с окончательным выбором <span class="color-pink">😉</span>.</p>
+                    <p>Спасибо за ваш отзыв и уделённое время!</p>
+                </div>
+                <!-- Форма добавления-->
+                <form id="form_review" action="{% url 'catalogue:reviews-add' product_slug=product.slug product_pk=product.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-row">
+
+                                <input type="text" placeholder="Ваше имя" name="name" >
+                            </div>
+                            <div class="form-row">
+                                <input type="text" placeholder="Возраст детей" name="{{ form_review.age_child.html_name }}">
+                            </div>
+
+                            <div class="addreview_form-rating">
+                                <div class="addreview_form-rating-name">Качество изготовления:</div>
+                                <div class="rating">
+                                    <span data-rating="5">&#9733;</span>
+                                    <span data-rating="4">&#9733;</span>
+                                    <span data-rating="3">&#9733;</span>
+                                    <span data-rating="2">&#9733;</span>
+                                    <span data-rating="1">&#9733;</span>
+                                    <input class="rating-val" type="hidden" name="{{ form_review.workmanship_score.html_name  }}">
+                                </div>
+                            </div>
+
+                            <div class="addreview_form-rating">
+                                <div class="addreview_form-rating-name">Удобство экспуатации:</div>
+                                <div class="rating">
+                                    <span data-rating="5">&#9733;</span>
+                                    <span data-rating="4">&#9733;</span>
+                                    <span data-rating="3">&#9733;</span>
+                                    <span data-rating="2">&#9733;</span>
+                                    <span data-rating="1">&#9733;</span>
+                                    <input class="rating-val" type="hidden" name="{{ form_review.service_ability_score.html_name }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-row">
+                                <input type="text" placeholder="Впечатление ребёнка от покупки" name="{{ form_review.impression.html_name }}">
+                            </div>
+                            <div class="form-row">
+                                <input type="text" placeholder="Достоинства товара" name="{{ form_review.dignity.html_name }}">
+                            </div>
+                            <div class="form-row">
+                                <input type="text" placeholder="Недостатки товара" name="{{ form_review.limitations.html_name }}">
+                            </div>
+                            <div class="form-row">
+                                <textarea placeholder="Комментарий о товаре" name="{{ form_review.body.html_name }}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn" type="submit">Отправить отзыв</button>
+                    </div>
+                </form>
+            {% else %}
+                <div>Вы не можете оставить отзыв к данному товару. <a href="#login" class="js-fancy">Войдите</a> или <a href="/accounts/register/" target="_blank">зарегистрируйтесь</a></div>
+            {% endif %}
+            <!-- Конец формы добавления-->
+        </div>
+    </div>
+</div>

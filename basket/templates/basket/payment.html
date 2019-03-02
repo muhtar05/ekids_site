@@ -1,0 +1,80 @@
+{% load static %}
+{% load common_tags %}
+<div class="cart-section  cart-section-payment  js-order-payment" data-step-name="payment">
+    <div class="cart-section-content">
+        <div class="vertical_tabs  js-vtabs">
+            <div class="vertical_tabs-index">
+                {% if city.region_name|is_moscow and city_data.post_pay or city_data.post_pay and not first_order %}
+                        <div class="vertical_tabs-index-item cash active" data-id="2">
+                            <label>
+                                <input class="pseudo-control" type="radio"  checked="checked" data-payment-method="cash"
+                                       data-btn-text="Завершить оформление" name="payment" value="2">
+                                <i class="pseudo-control-radio"></i>
+                                <div class="vertical_tabs-index-item-name">Оплата при получении</div>
+                            </label>
+                        </div>
+                {% endif %}
+                <div class="vertical_tabs-index-item online" data-id="1">
+                    <label>
+                        <input class="pseudo-control" type="radio"
+                               data-payment-method="online" data-btn-text="Перейти к оплате"
+                               name="payment" value="1">
+                        <i class="pseudo-control-radio"></i>
+                        <div class="vertical_tabs-index-item-name">Онлайн-оплата</div>
+                    </label>
+                </div>
+                {% if not city.region_name|is_moscow and first_order %}
+                <label class="warning-payment">
+                    <span class="warning-npp exclamation-mark ">!</span><i> Для вашего региона оплата при получении станет возможна начиная со второго заказа.</i>
+                </label>
+                {% endif %}
+            </div>
+            <div class="vertical_tabs-content">
+                <div class="vertical_tabs-content-item  cash vertical_tabs-item-2  active">
+                    <div class="order-info">
+                        <p>Вы оплачиваете заказ нашему курьеру при получении товара. К оплате принимаются наличные и банковские карты.</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_card"></span></div>
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_cash"></span></div>
+                    </div>
+                </div>
+                <div class="vertical_tabs-content-item  online vertical_tabs-item-1">
+                    <form id="yandex-send" action="{{ YANDEX_MONEY.url }}" method="post">
+                        <input type="hidden" value="{{ discount_order_total|floatformat:0 }}" name="sum" id="totalOrderSum">
+                        <input type='hidden' name='shopId' value='{{ YANDEX_MONEY.shop_id }}'>
+                        <input type='hidden' name='scid' value='{{ YANDEX_MONEY.scid }}'>
+                        <input name="customerNumber" value="{{ request.user.pk }}" type="hidden">
+                        <input id="basketNumberId" name="orderNumber" value="{{ request.basket.basket_number }}" type="hidden">
+                    </form>
+                    <div class="order-info">
+                        <p>Вы можете оплатить ваш заказ прямо сейчас с использованием сервиса Yandex. К оплате принимаются банковские карты платежных систем Visa, MasterCard, Яндекс.Деньги и др. Услуга бесплатная, никаких дополнительных процентов вы не платите.</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_card"></span></div>
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_yamoney"></span></div>
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_qiwi"></span></div>
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_cash"></span></div>
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_alfaclick"></span></div>
+                        <div class="col-sm-2  col-xs-4"><span class="payments__item payments__item_promsvyazbank"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% if not user.is_authenticated or user.is_subscribed == 0 %}
+        <div class="cart-oferta-subs">
+            <div class="row">
+                <label>
+                    <input class="pseudo-control" type="checkbox" checked="checked" name="subscribe">
+                    <i class="pseudo-control-checkbox"></i>
+                    Подписка на новости и скидки
+                </label>
+            </div>
+            <div class="row oferta">*Нажимая на кнопку «Продолжить», я соглашаюсь с условиями <a
+                    href="/static/files/oferta.docx">Публичной оферты</a> и даю согласие на <a
+                    href="/static/files/oferta.docx">обработку своих персональных данных</a>.
+            </div>
+        </div>
+    {% endif %}
+    </div>
+</div>

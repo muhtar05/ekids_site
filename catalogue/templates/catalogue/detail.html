@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load basket_tags %}
+{% load category_tags %}
+{% block content %}
+<!-- products -->
+	<div class="products">
+		<div class="container">
+			<div class="products-grids">
+				<div class="col-md-8 products-single">
+				<div class="col-md-5 grid-single">
+						<div class="flexslider">
+							  <ul class="slides">
+								<li data-thumb="images/z1.jpg">
+									<div class="thumb-image">
+                                        <img src="/media/{{ product.primary_image.original }}" data-imagezoom="true"
+                                             class="img-responsive" alt=""/> </div>
+								</li>
+							  </ul>
+						</div>
+					</div>
+				<div class="col-md-7 single-text">
+					<div class="details-left-info simpleCart_shelfItem">
+						<h3>{{ product }}</h3>
+						<p class="availability">Availability: <span class="color">In stock</span></p>
+						<div class="price_single">
+							<span class="reducedfrom">$800.00</span>
+							<span class="actual item_price">$600.00</span><a href="#">click for offer</a>
+						</div>
+						<h2 class="quick"><scnh</h2>
+						<p class="quick_desc">{{ product.description }}</p>
+					    <h3>Доступные цвета</h3>
+						<ul class="product-colors">
+							<li><a class="color1" href="#"><span> </span></a></li>
+							<li><a class="color2" href="#"><span> </span></a></li>
+						</ul>
+						<h3>Длина</h3>
+						<ul class="size">
+							<li><a href="#">7</a></li>
+						</ul>
+						<div class="quantity_box">
+						    <span>Количество:</span>
+							<div class="product-qty">
+								<select>
+									<option>1</option>
+								</select>
+							</div>
+						</div>
+					<div class="clearfix"> </div>
+
+            {% block product_basket_form %}
+                {% include "catalogue/partials/add_to_basket_form.html" %}
+            {% endblock %}
+
+			</div>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="col-md-4 products-grid-right">
+					<div class="w_sidebar">
+						<div class="w_nav1">
+							<h4>Все</h4>
+                        {% category_list_widget %}
+						</div>
+
+
+					</div>
+				</div>
+				<div class="clearfix"></div>
+				<!-- collapse -->
+    <div class="panel-group collpse" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          Описание
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+          {{ product.description }}
+      </div>
+    </div>
+  </div>
+
+
+
+</div>
+<!-- collapse -->
+ <!--/start-latest-->
+		<div class="collection-section">
+		     <h3 class="tittle">Похожие продукты</h3>
+
+		   <div class="fashion-info">
+				<div class="clearfix"></div>
+			</div>
+		</div>
+	</div>
+       <!--//latest-->
+			</div>
+	</div>
+<!-- //products -->
+{% endblock %}

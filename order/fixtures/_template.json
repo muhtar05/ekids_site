@@ -1,0 +1,9 @@
+[
+  {
+    "model": "order.OrderStatus",
+    "pk": 1,
+    "fields": {
+      "name": "Принят"
+    }
+  }
+]
